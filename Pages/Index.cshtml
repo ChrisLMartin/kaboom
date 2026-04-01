@@ -8,7 +8,7 @@
     <div>
         <p class="eyebrow">Month in focus</p>
         <h2>@Model.Dashboard.Month.MonthDate.ToString("MMMM yyyy")</h2>
-        <p class="lede">See how much cash is available, how much is protected for upcoming expenses, and whether your next month buffer is growing.</p>
+        <p class="lede">See how much cash is available and how much is already committed to your current plan.</p>
     </div>
     <form method="get" class="inline-form compact-form">
         <label>
@@ -34,11 +34,6 @@
         <span>Protected for true expenses</span>
         <strong>@Model.Dashboard.ProtectedForTrueExpenses.ToString("C")</strong>
         <small>Funds sitting in target-based categories.</small>
-    </article>
-    <article class="metric card accent-warm">
-        <span>Next month buffer</span>
-        <strong>@Model.Dashboard.BufferBalance.ToString("C")</strong>
-        <small>Money reserved to get ahead.</small>
     </article>
 </section>
 

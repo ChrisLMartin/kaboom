@@ -4,7 +4,6 @@ Spendwise is a self-contained ASP.NET Core budgeting app inspired by zero-based 
 
 - Give every dollar a job.
 - Prepare for less frequent expenses.
-- Build a buffer for next month.
 - Fund goals intentionally.
 - Reassign money when priorities change.
 
@@ -15,7 +14,7 @@ Spendwise is a self-contained ASP.NET Core budgeting app inspired by zero-based 
 - Monthly budget screen with assigned, activity, and available amounts.
 - Move-money workflow to adapt when plans change.
 - Transaction entry that updates account balances.
-- Dashboard and reports for spending, targets, and buffer progress.
+- Dashboard and reports for spending and category progress.
 - JSON file persistence in `App_Data/budget-data.json`.
 
 ## Run With .NET 10 SDK
@@ -50,3 +49,9 @@ Then open `http://localhost:8080`.
 
 - The app is intentionally original and does not use YNAB branding or proprietary assets.
 - The native app was locally verified on `http://localhost:5085` with a successful `200 OK` response.
+
+
+## Documentation
+
+- User guide: docs/USER_GUIDE.md`r
+

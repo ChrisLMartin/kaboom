@@ -20,8 +20,7 @@ public sealed class BudgetCalculator
                 .Select(transaction => BuildTransactionListItem(data, transaction))
                 .ToList(),
             Math.Abs(thisMonthSpent),
-            trueExpenseFund,
-            month.CategoryRows.Where(row => row.IsBufferCategory).Sum(row => row.Available));
+            trueExpenseFund);
     }
 
     public BudgetMonthViewModel BuildMonth(BudgetData data, string monthKey)
@@ -42,7 +41,6 @@ public sealed class BudgetCalculator
                     category.Id,
                     category.Name,
                     category.MonthlyTarget,
-                    category.IsBufferCategory,
                     assignedMap.GetValueOrDefault(category.Id),
                     activityMap.GetValueOrDefault(category.Id),
                     availableMap.GetValueOrDefault(category.Id)));
@@ -294,7 +292,6 @@ public sealed record CategoryBudgetRow(
     string CategoryId,
     string CategoryName,
     decimal Target,
-    bool IsBufferCategory,
     decimal Assigned,
     decimal Activity,
     decimal Available);
@@ -303,8 +300,7 @@ public sealed record DashboardViewModel(
     BudgetMonthViewModel Month,
     IReadOnlyList<TransactionListItem> RecentTransactions,
     decimal SpentThisMonth,
-    decimal ProtectedForTrueExpenses,
-    decimal BufferBalance);
+    decimal ProtectedForTrueExpenses);
 
 public sealed record TransactionListItem(
     string Id,

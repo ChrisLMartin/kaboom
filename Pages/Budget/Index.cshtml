@@ -54,64 +54,31 @@
         </div>
     </section>
 
-    <section class="budget-tools">
-        <article class="card">
-            <h3>Add category group</h3>
-            <form method="post" asp-page-handler="AddGroup" class="stack-form">
-                <input type="hidden" name="startMonth" value="@Model.StartMonthKey" />
-                <label>
-                    <span>Group name</span>
-                    <input type="text" name="groupName" placeholder="Subscriptions" />
-                </label>
-                <button type="submit" class="secondary">Create group</button>
-            </form>
-        </article>
-
-        <article class="card">
-            <h3>Add category</h3>
-            <form method="post" asp-page-handler="AddCategory" class="stack-form">
-                <input type="hidden" name="startMonth" value="@Model.StartMonthKey" />
-                <label>
-                    <span>Group</span>
-                    <select name="groupId">
-                        @foreach (var group in Model.CategoryGroups)
-                        {
-                            <option value="@group.Id">@group.Name</option>
-                        }
-                    </select>
-                </label>
-                <label>
-                    <span>Category name</span>
-                    <input type="text" name="categoryName" placeholder="Internet" />
-                </label>
-                <label class="toggle-line">
-                    <input type="checkbox" name="isBufferCategory" value="true" />
-                    <span>Treat as next-month buffer</span>
-                </label>
-                <button type="submit" class="secondary">Create category</button>
-            </form>
-        </article>
-    </section>
-
     <section class="card">
-        <form method="post" asp-page-handler="Save">
+        <form method="post" asp-page-handler="Save" id="budget-form">
             <input type="hidden" name="startMonth" value="@Model.StartMonthKey" />
             <div class="table-wrap budget-grid-wrap">
                 <table class="data-table budget-grid">
                     <thead>
                         <tr>
-                            <th rowspan="2" class="category-column">Categories</th>
-                            @foreach (var month in months)
+                            <th rowspan="2" class="category-column">
+                                <div class="categories-heading">
+                                    <span>Categories</span>
+                                    <button type="button" class="add-category-button" id="open-add-category-modal" aria-label="Add category">+</button>
+                                </div>
+                            </th>
+                            @for (var monthIndex = 0; monthIndex < months.Count; monthIndex++)
                             {
+                                var month = months[monthIndex];
                                 <th colspan="3" class="month-column-group">@month.MonthDate.ToString("MMM yyyy")</th>
                             }
                         </tr>
                         <tr>
-                            @foreach (var month in months)
+                            @for (var monthIndex = 0; monthIndex < months.Count; monthIndex++)
                             {
-                                <th>Budgeted</th>
-                                <th>Outflows</th>
-                                <th>Balance</th>
+                                <th class="month-subhead month-start">Budgeted</th>
+                                <th class="month-subhead">Outflows</th>
+                                <th class="month-subhead month-end">Balance</th>
                             }
                         </tr>
                     </thead>
@@ -121,6 +88,11 @@
                             <tr class="group-row">
                                 <td colspan="@(1 + months.Count * 3)">
                                     <div class="budget-group-head">
+                                        <input type="text"
+                                               class="group-name-input"
+                                               name="GroupNames[@group.Id]"
+                                               value="@group.Name"
+                                               aria-label="Group name for @group.Name" />
                                         <button type="button"
                                                 class="group-toggle"
                                                 data-group="@group.Id"
@@ -128,11 +100,6 @@
                                                 aria-label="Collapse @group.Name">
                                             ▾
                                         </button>
-                                        <input type="text"
-                                               class="group-name-input"
-                                               name="GroupNames[@group.Id]"
-                                               value="@group.Name"
-                                               aria-label="Group name for @group.Name" />
                                         <span class="badge">@group.Categories.Count categories</span>
                                     </div>
                                 </td>
@@ -147,33 +114,27 @@
                                                    name="CategoryNames[@category.Id]"
                                                    value="@category.Name"
                                                    aria-label="Category name for @category.Name" />
-                                            <label class="toggle-line">
-                                                <input type="checkbox"
-                                                       name="BufferCategoryIds"
-                                                       value="@category.Id"
-                                                       checked="@category.IsBufferCategory" />
-                                                <span>Buffer</span>
-                                            </label>
                                         </div>
                                     </td>
 
-                                    @foreach (var month in months)
+                                    @for (var monthIndex = 0; monthIndex < months.Count; monthIndex++)
                                     {
+                                        var month = months[monthIndex];
                                         var row = month.CategoryRows.FirstOrDefault(item => item.CategoryId == category.Id);
                                         if (row is null)
                                         {
-                                            row = new CategoryBudgetRow(group.Id, group.Name, category.Id, category.Name, category.MonthlyTarget, category.IsBufferCategory, 0m, 0m, 0m);
+                                            row = new CategoryBudgetRow(group.Id, group.Name, category.Id, category.Name, category.MonthlyTarget, 0m, 0m, 0m);
                                         }
 
-                                        <td>
+                                        <td class="budget-value-cell month-start">
                                             <input type="number"
                                                    step="0.01"
                                                    name="BudgetedAmounts[@(month.MonthKey + "|" + category.Id)]"
                                                    value="@row.Assigned"
                                                    aria-label="@($"Budgeted amount for {category.Name} in {month.MonthDate:MMMM yyyy}")" />
                                         </td>
-                                        <td class="@(row.Activity >= 0 ? "positive" : "negative")">@row.Activity.ToString("C")</td>
-                                        <td class="@(row.Available >= 0 ? "positive" : "negative")">@row.Available.ToString("C")</td>
+                                        <td class="budget-value-cell @(row.Activity >= 0 ? "positive" : "negative")">@row.Activity.ToString("C")</td>
+                                        <td class="budget-value-cell month-end @(row.Available >= 0 ? "positive" : "negative")">@row.Available.ToString("C")</td>
                                     }
                                 </tr>
                             }
@@ -188,7 +149,7 @@
                     Ready to budget in @months[0].MonthDate.ToString("MMMM yyyy") is
                     <span class="budget-savebar-amount">@months[0].ReadyToAssign.ToString("C")</span>
                 </div>
-                <button type="submit">Save budget changes</button>
+                <div class="autosave-status" id="budget-autosave-status">Changes save automatically.</div>
             </div>
         </form>
     </section>
@@ -240,6 +201,56 @@
     </section>
 </section>
 
+<dialog class="budget-modal" id="add-category-modal">
+    <form method="post" asp-page-handler="AddCategory" class="budget-modal-form">
+        <input type="hidden" name="startMonth" value="@Model.StartMonthKey" />
+        <div class="budget-modal-head">
+            <div>
+                <p class="eyebrow">Category setup</p>
+                <h3>Add a category</h3>
+            </div>
+            <button type="button" class="modal-close" id="close-add-category-modal" aria-label="Close add category dialog">×</button>
+        </div>
+
+        <label>
+            <span>Category name</span>
+            <input type="text" name="categoryName" placeholder="Internet" />
+        </label>
+
+        <fieldset class="modal-choice-group">
+            <legend>Group</legend>
+            <label class="choice-card">
+                <input type="radio" name="groupMode" value="existing" checked="@Model.CategoryGroups.Any()" />
+                <span>Use an existing group</span>
+            </label>
+            <label class="choice-card">
+                <input type="radio" name="groupMode" value="new" checked="@(!Model.CategoryGroups.Any())" />
+                <span>Create a new group</span>
+            </label>
+        </fieldset>
+
+        <label id="existing-group-field">
+            <span>Existing group</span>
+            <select name="groupId">
+                @foreach (var group in Model.CategoryGroups)
+                {
+                    <option value="@group.Id">@group.Name</option>
+                }
+            </select>
+        </label>
+
+        <label id="new-group-field">
+            <span>New group name</span>
+            <input type="text" name="newGroupName" placeholder="Subscriptions" />
+        </label>
+
+        <div class="budget-modal-actions">
+            <button type="button" class="secondary" id="cancel-add-category-modal">Cancel</button>
+            <button type="submit">Create category</button>
+        </div>
+    </form>
+</dialog>
+
 <script>
     document.querySelectorAll('.group-toggle').forEach(function (button) {
         button.addEventListener('click', function () {
@@ -252,4 +263,140 @@
             button.textContent = isExpanded ? '▸' : '▾';
         });
     });
+
+    var addCategoryModal = document.getElementById('add-category-modal');
+    var openAddCategoryModal = document.getElementById('open-add-category-modal');
+    var closeAddCategoryModal = document.getElementById('close-add-category-modal');
+    var cancelAddCategoryModal = document.getElementById('cancel-add-category-modal');
+    var existingGroupField = document.getElementById('existing-group-field');
+    var newGroupField = document.getElementById('new-group-field');
+    var budgetForm = document.getElementById('budget-form');
+    var autosaveStatus = document.getElementById('budget-autosave-status');
+    var autosaveTimer = null;
+    var autosaveInFlight = false;
+    var autosaveQueued = false;
+
+    function syncGroupMode() {
+        var selected = document.querySelector('input[name="groupMode"]:checked');
+        var useNewGroup = selected && selected.value === 'new';
+        existingGroupField.hidden = useNewGroup;
+        newGroupField.hidden = !useNewGroup;
+    }
+
+    function setAutosaveStatus(message, state) {
+        if (!autosaveStatus) {
+            return;
+        }
+
+        autosaveStatus.textContent = message;
+        autosaveStatus.dataset.state = state || '';
+    }
+
+    async function performAutosave() {
+        if (!budgetForm) {
+            return;
+        }
+
+        if (autosaveInFlight) {
+            autosaveQueued = true;
+            return;
+        }
+
+        autosaveInFlight = true;
+        autosaveQueued = false;
+        setAutosaveStatus('Saving changes...', 'saving');
+
+        try {
+            var formData = new FormData(budgetForm);
+            var response = await fetch(window.location.pathname + '?handler=Save', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Save failed.');
+            }
+
+            var result = await response.json();
+            setAutosaveStatus('Saved at ' + result.savedAt, 'saved');
+        } catch (error) {
+            setAutosaveStatus('Autosave failed. Refresh and try again.', 'error');
+        } finally {
+            autosaveInFlight = false;
+            if (autosaveQueued) {
+                performAutosave();
+            }
+        }
+    }
+
+    function requestAutosave(immediate) {
+        if (!budgetForm) {
+            return;
+        }
+
+        if (autosaveTimer) {
+            clearTimeout(autosaveTimer);
+        }
+
+        if (immediate) {
+            performAutosave();
+            return;
+        }
+
+        setAutosaveStatus('Changes not saved yet...', 'pending');
+        autosaveTimer = setTimeout(function () {
+            performAutosave();
+        }, 900);
+    }
+
+    if (budgetForm) {
+        budgetForm.addEventListener('input', function (event) {
+            if (event.target.matches('input[type="text"], input[type="number"]')) {
+                requestAutosave(false);
+            }
+        });
+
+        budgetForm.addEventListener('change', function (event) {
+            if (event.target.matches('input[type="text"], input[type="number"], select')) {
+                requestAutosave(false);
+            }
+        });
+
+        budgetForm.addEventListener('focusout', function (event) {
+            if (event.target.matches('input[type="text"], input[type="number"], select')) {
+                requestAutosave(true);
+            }
+        });
+
+        budgetForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            requestAutosave(true);
+        });
+    }
+
+    if (openAddCategoryModal && addCategoryModal) {
+        openAddCategoryModal.addEventListener('click', function () {
+            addCategoryModal.showModal();
+            syncGroupMode();
+        });
+    }
+
+    [closeAddCategoryModal, cancelAddCategoryModal].forEach(function (button) {
+        if (!button || !addCategoryModal) {
+            return;
+        }
+
+        button.addEventListener('click', function () {
+            addCategoryModal.close();
+        });
+    });
+
+    document.querySelectorAll('input[name="groupMode"]').forEach(function (radio) {
+        radio.addEventListener('change', syncGroupMode);
+    });
+
+    syncGroupMode();
 </script>

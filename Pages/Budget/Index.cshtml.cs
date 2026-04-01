@@ -25,9 +25,6 @@ public sealed class IndexModel : PageModel
     [BindProperty]
     public Dictionary<string, string> GroupNames { get; set; } = [];
 
-    [BindProperty]
-    public List<string> BufferCategoryIds { get; set; } = [];
-
     public string StartMonthKey { get; private set; } = string.Empty;
     public IReadOnlyList<BudgetMonthViewModel> VisibleMonths { get; private set; } = [];
     public IReadOnlyList<CategoryGroup> CategoryGroups { get; private set; } = [];
@@ -56,6 +53,16 @@ public sealed class IndexModel : PageModel
         }
 
         await _repository.SaveAsync(data);
+
+        if (IsAjaxRequest())
+        {
+            return new JsonResult(new
+            {
+                status = "saved",
+                savedAt = DateTime.Now.ToString("HH:mm:ss")
+            });
+        }
+
         TempData["StatusMessage"] = "Budget and categories updated.";
         return RedirectToPage(new { month = startMonth });
     }
@@ -69,46 +76,46 @@ public sealed class IndexModel : PageModel
         return RedirectToPage(new { month = startMonth });
     }
 
-    public async Task<IActionResult> OnPostAddGroupAsync(string startMonth, string groupName)
+    public async Task<IActionResult> OnPostAddCategoryAsync(string startMonth, string? groupId, string? newGroupName, string categoryName)
     {
-        if (string.IsNullOrWhiteSpace(groupName))
+        var data = await _repository.GetAsync();
+        if (string.IsNullOrWhiteSpace(categoryName))
         {
-            TempData["StatusMessage"] = "Group name is required.";
+            TempData["StatusMessage"] = "Choose a category name.";
             return RedirectToPage(new { month = startMonth });
         }
 
-        var data = await _repository.GetAsync();
-        data.CategoryGroups.Add(new CategoryGroup { Name = groupName.Trim() });
-        await _repository.SaveAsync(data);
-        TempData["StatusMessage"] = "Category group added.";
-        return RedirectToPage(new { month = startMonth });
-    }
-
-    public async Task<IActionResult> OnPostAddCategoryAsync(string startMonth, string groupId, string categoryName, bool isBufferCategory)
-    {
-        var data = await _repository.GetAsync();
-        var group = data.CategoryGroups.FirstOrDefault(item => item.Id == groupId);
-        if (group is null || string.IsNullOrWhiteSpace(categoryName))
+        CategoryGroup? group = null;
+        if (!string.IsNullOrWhiteSpace(newGroupName))
         {
-            TempData["StatusMessage"] = "Choose a group and category name.";
+            group = new CategoryGroup { Name = newGroupName.Trim() };
+            data.CategoryGroups.Add(group);
+        }
+        else if (!string.IsNullOrWhiteSpace(groupId))
+        {
+            group = data.CategoryGroups.FirstOrDefault(item => item.Id == groupId);
+        }
+
+        if (group is null)
+        {
+            TempData["StatusMessage"] = "Choose an existing group or create a new one.";
             return RedirectToPage(new { month = startMonth });
         }
 
         group.Categories.Add(new BudgetCategory
         {
-            Name = categoryName.Trim(),
-            IsBufferCategory = isBufferCategory
+            Name = categoryName.Trim()
         });
 
         await _repository.SaveAsync(data);
-        TempData["StatusMessage"] = "Category added.";
+        TempData["StatusMessage"] = string.IsNullOrWhiteSpace(newGroupName)
+            ? "Category added."
+            : "Category and new group added.";
         return RedirectToPage(new { month = startMonth });
     }
 
     private void ApplyCategoryEdits(BudgetData data)
     {
-        var bufferSet = BufferCategoryIds.ToHashSet(StringComparer.OrdinalIgnoreCase);
-
         foreach (var group in data.CategoryGroups)
         {
             if (GroupNames.TryGetValue(group.Id, out var groupName) && !string.IsNullOrWhiteSpace(groupName))
@@ -123,8 +130,6 @@ public sealed class IndexModel : PageModel
             {
                 category.Name = categoryName.Trim();
             }
-
-            category.IsBufferCategory = bufferSet.Contains(category.Id);
         }
     }
 
@@ -149,11 +154,15 @@ public sealed class IndexModel : PageModel
                     {
                         Id = category.Id,
                         Name = category.Name,
-                        MonthlyTarget = category.MonthlyTarget,
-                        IsBufferCategory = category.IsBufferCategory
+                        MonthlyTarget = category.MonthlyTarget
                     })
                     .ToList()
             })
             .ToList();
+    }
+
+    private bool IsAjaxRequest()
+    {
+        return string.Equals(Request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
     }
 }

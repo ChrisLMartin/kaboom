@@ -30,7 +30,6 @@ public static class DemoDataFactory
         var carMaintenance = new BudgetCategory { Id = "cat-car", Name = "Car Maintenance", MonthlyTarget = 95m };
         var holidays = new BudgetCategory { Id = "cat-holiday", Name = "Holiday Gifts", MonthlyTarget = 60m };
         var travel = new BudgetCategory { Id = "cat-travel", Name = "Weekend Escape", MonthlyTarget = 120m };
-        var nextMonth = new BudgetCategory { Id = "cat-buffer", Name = "Next Month Buffer", MonthlyTarget = 900m, IsBufferCategory = true };
 
         var data = new BudgetData
         {
@@ -59,7 +58,7 @@ public static class DemoDataFactory
                 {
                     Id = "grp-dreams",
                     Name = "Goals",
-                    Categories = [travel, nextMonth]
+                    Categories = [travel]
                 }
             ]
         };
@@ -79,8 +78,7 @@ public static class DemoDataFactory
                 new CategoryAllocation { CategoryId = dining.Id, AssignedAmount = 160m },
                 new CategoryAllocation { CategoryId = carMaintenance.Id, AssignedAmount = 95m },
                 new CategoryAllocation { CategoryId = holidays.Id, AssignedAmount = 60m },
-                new CategoryAllocation { CategoryId = travel.Id, AssignedAmount = 100m },
-                new CategoryAllocation { CategoryId = nextMonth.Id, AssignedAmount = 750m }
+                new CategoryAllocation { CategoryId = travel.Id, AssignedAmount = 100m }
             ]
         });
 
@@ -96,8 +94,7 @@ public static class DemoDataFactory
                 new CategoryAllocation { CategoryId = dining.Id, AssignedAmount = 150m },
                 new CategoryAllocation { CategoryId = carMaintenance.Id, AssignedAmount = 95m },
                 new CategoryAllocation { CategoryId = holidays.Id, AssignedAmount = 60m },
-                new CategoryAllocation { CategoryId = travel.Id, AssignedAmount = 120m },
-                new CategoryAllocation { CategoryId = nextMonth.Id, AssignedAmount = 500m }
+                new CategoryAllocation { CategoryId = travel.Id, AssignedAmount = 120m }
             ]
         });
 
