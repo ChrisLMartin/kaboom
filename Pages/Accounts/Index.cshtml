@@ -1,0 +1,51 @@
+@page
+@model Spendwise.Pages.Accounts.IndexModel
+@{
+    ViewData["Title"] = "Accounts";
+}
+
+<section class="split-grid">
+    <article class="card">
+        <h2>Tracked accounts</h2>
+        <div class="list-stack">
+            @foreach (var account in Model.Accounts)
+            {
+                <form method="post" asp-page-handler="UpdateBalance" class="summary-row">
+                    <div>
+                        <strong>@account.Name</strong>
+                        <p>@account.Kind</p>
+                    </div>
+                    <input type="hidden" name="accountId" value="@account.Id" />
+                    <div>
+                        <label>
+                            <span>Balance</span>
+                            <input type="number" step="0.01" name="balance" value="@account.Balance" />
+                        </label>
+                    </div>
+                    <div>
+                        <button type="submit" class="secondary">Save</button>
+                    </div>
+                </form>
+            }
+        </div>
+    </article>
+
+    <article class="card">
+        <h2>Add account</h2>
+        <form method="post" asp-page-handler="Add" class="stack-form">
+            <label>
+                <span>Name</span>
+                <input type="text" name="name" placeholder="Offset Account" />
+            </label>
+            <label>
+                <span>Type</span>
+                <select name="kind" asp-items="Html.GetEnumSelectList<AccountKind>()"></select>
+            </label>
+            <label>
+                <span>Starting balance</span>
+                <input type="number" step="0.01" name="balance" value="0" />
+            </label>
+            <button type="submit">Create account</button>
+        </form>
+    </article>
+</section>

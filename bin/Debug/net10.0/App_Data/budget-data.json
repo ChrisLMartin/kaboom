@@ -1,0 +1,255 @@
+{
+  "CreatedUtc": "2026-04-01T11:55:47.8222094Z",
+  "Accounts": [
+    {
+      "Id": "acct-everyday",
+      "Name": "Everyday Checking",
+      "Kind": "Checking",
+      "Balance": 5525.50
+    },
+    {
+      "Id": "acct-savings",
+      "Name": "Rainy Day Savings",
+      "Kind": "Savings",
+      "Balance": 2800
+    }
+  ],
+  "CategoryGroups": [
+    {
+      "Id": "grp-living",
+      "Name": "Living Costs",
+      "Categories": [
+        {
+          "Id": "cat-rent",
+          "Name": "Rent",
+          "MonthlyTarget": 1850,
+          "IsBufferCategory": false
+        },
+        {
+          "Id": "cat-utilities",
+          "Name": "Utilities",
+          "MonthlyTarget": 240,
+          "IsBufferCategory": false
+        },
+        {
+          "Id": "cat-phone",
+          "Name": "Phone",
+          "MonthlyTarget": 70,
+          "IsBufferCategory": false
+        }
+      ]
+    },
+    {
+      "Id": "grp-daily",
+      "Name": "Daily Life",
+      "Categories": [
+        {
+          "Id": "cat-groceries",
+          "Name": "Groceries",
+          "MonthlyTarget": 700,
+          "IsBufferCategory": false
+        },
+        {
+          "Id": "cat-dining",
+          "Name": "Dining Out",
+          "MonthlyTarget": 180,
+          "IsBufferCategory": false
+        }
+      ]
+    },
+    {
+      "Id": "grp-future",
+      "Name": "True Expenses",
+      "Categories": [
+        {
+          "Id": "cat-car",
+          "Name": "Car Maintenance",
+          "MonthlyTarget": 95,
+          "IsBufferCategory": false
+        },
+        {
+          "Id": "cat-holiday",
+          "Name": "Holiday Gifts",
+          "MonthlyTarget": 60,
+          "IsBufferCategory": false
+        }
+      ]
+    },
+    {
+      "Id": "grp-dreams",
+      "Name": "Goals",
+      "Categories": [
+        {
+          "Id": "cat-travel",
+          "Name": "Weekend Escape",
+          "MonthlyTarget": 120,
+          "IsBufferCategory": false
+        },
+        {
+          "Id": "cat-buffer",
+          "Name": "Next Month Buffer",
+          "MonthlyTarget": 900,
+          "IsBufferCategory": true
+        }
+      ]
+    }
+  ],
+  "Transactions": [
+    {
+      "Id": "txn-1",
+      "Date": "2026-03-12T00:00:00+08:00",
+      "AccountId": "acct-everyday",
+      "CategoryId": "cat-groceries",
+      "Payee": "Fresh Pantry",
+      "Notes": "Weekly shop",
+      "Amount": -154.27
+    },
+    {
+      "Id": "txn-2",
+      "Date": "2026-03-14T00:00:00+08:00",
+      "AccountId": "acct-everyday",
+      "CategoryId": "cat-rent",
+      "Payee": "Riverside Realty",
+      "Notes": "April rent",
+      "Amount": -1850
+    },
+    {
+      "Id": "txn-3",
+      "Date": "2026-03-18T00:00:00+08:00",
+      "AccountId": "acct-everyday",
+      "CategoryId": "cat-dining",
+      "Payee": "Bento \u0026 Co",
+      "Notes": "Dinner with friends",
+      "Amount": -42.50
+    },
+    {
+      "Id": "txn-4",
+      "Date": "2026-03-21T00:00:00+08:00",
+      "AccountId": "acct-everyday",
+      "CategoryId": "cat-utilities",
+      "Payee": "City Utilities",
+      "Notes": "Electricity bill",
+      "Amount": -112.18
+    },
+    {
+      "Id": "txn-5",
+      "Date": "2026-03-27T00:00:00+08:00",
+      "AccountId": "acct-savings",
+      "CategoryId": null,
+      "Payee": "Salary",
+      "Notes": "Monthly pay",
+      "Amount": 3200
+    },
+    {
+      "Id": "txn-6",
+      "Date": "2026-03-30T00:00:00+08:00",
+      "AccountId": "acct-everyday",
+      "CategoryId": "cat-groceries",
+      "Payee": "Open Market",
+      "Notes": "Fruit and essentials",
+      "Amount": -89.12
+    },
+    {
+      "Id": "c1d4b57b81be43bd85376693e6839445",
+      "Date": "2026-04-01T00:00:00",
+      "AccountId": "acct-everyday",
+      "CategoryId": null,
+      "Payee": "Test payee",
+      "Notes": "Test notes",
+      "Amount": 100
+    },
+    {
+      "Id": "e418d8ca3d4c40cb862ff72ed1e07ea5",
+      "Date": "2026-04-01T00:00:00",
+      "AccountId": "acct-everyday",
+      "CategoryId": null,
+      "Payee": "Test payee",
+      "Notes": "Test notes",
+      "Amount": 1000
+    }
+  ],
+  "MonthlyBudgets": [
+    {
+      "MonthKey": "2026-03",
+      "Allocations": [
+        {
+          "CategoryId": "cat-rent",
+          "AssignedAmount": 1850
+        },
+        {
+          "CategoryId": "cat-utilities",
+          "AssignedAmount": 240
+        },
+        {
+          "CategoryId": "cat-phone",
+          "AssignedAmount": 70
+        },
+        {
+          "CategoryId": "cat-groceries",
+          "AssignedAmount": 650
+        },
+        {
+          "CategoryId": "cat-dining",
+          "AssignedAmount": 160
+        },
+        {
+          "CategoryId": "cat-car",
+          "AssignedAmount": 95
+        },
+        {
+          "CategoryId": "cat-holiday",
+          "AssignedAmount": 60
+        },
+        {
+          "CategoryId": "cat-travel",
+          "AssignedAmount": 100
+        },
+        {
+          "CategoryId": "cat-buffer",
+          "AssignedAmount": 750
+        }
+      ]
+    },
+    {
+      "MonthKey": "2026-04",
+      "Allocations": [
+        {
+          "CategoryId": "cat-rent",
+          "AssignedAmount": 1850
+        },
+        {
+          "CategoryId": "cat-utilities",
+          "AssignedAmount": 240
+        },
+        {
+          "CategoryId": "cat-phone",
+          "AssignedAmount": 70
+        },
+        {
+          "CategoryId": "cat-groceries",
+          "AssignedAmount": 610
+        },
+        {
+          "CategoryId": "cat-dining",
+          "AssignedAmount": 250
+        },
+        {
+          "CategoryId": "cat-car",
+          "AssignedAmount": 95
+        },
+        {
+          "CategoryId": "cat-holiday",
+          "AssignedAmount": 60
+        },
+        {
+          "CategoryId": "cat-travel",
+          "AssignedAmount": 120
+        },
+        {
+          "CategoryId": "cat-buffer",
+          "AssignedAmount": 500
+        }
+      ]
+    }
+  ]
+}

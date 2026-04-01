@@ -1,0 +1,59 @@
+@page
+@model Spendwise.Pages.Reports.IndexModel
+@{
+    ViewData["Title"] = "Reports";
+}
+
+<section class="hero card">
+    <div>
+        <p class="eyebrow">Spending review</p>
+        <h2>@Model.Report.Month.MonthDate.ToString("MMMM yyyy")</h2>
+        <p class="lede">Check where cash went this month and which sinking funds are closest to their target.</p>
+    </div>
+    <form method="get" class="inline-form compact-form">
+        <label>
+            <span>Month</span>
+            <input type="month" name="month" value="@Model.Report.Month.MonthKey" />
+        </label>
+        <button type="submit">Load report</button>
+    </form>
+</section>
+
+<section class="two-column">
+    <article class="card">
+        <h3>Spending by group</h3>
+        <div class="list-stack">
+            @foreach (var item in Model.Report.SpendingByGroup)
+            {
+                <div class="summary-row">
+                    <div>
+                        <strong>@item.GroupName</strong>
+                        <p>Remaining available: @item.Remaining.ToString("C")</p>
+                    </div>
+                    <strong>@item.Spent.ToString("C")</strong>
+                </div>
+            }
+        </div>
+    </article>
+
+    <article class="card">
+        <h3>Target progress</h3>
+        <div class="list-stack">
+            @foreach (var item in Model.Report.Targets)
+            {
+                <div>
+                    <div class="summary-row">
+                        <div>
+                            <strong>@item.CategoryName</strong>
+                            <p>@item.GroupName</p>
+                        </div>
+                        <strong>@item.Available.ToString("C") / @item.Target.ToString("C")</strong>
+                    </div>
+                    <div class="progress">
+                        <span style="width:@(item.ProgressRatio * 100)%"></span>
+                    </div>
+                </div>
+            }
+        </div>
+    </article>
+</section>

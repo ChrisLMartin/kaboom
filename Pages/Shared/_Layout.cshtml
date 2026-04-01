@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Spendwise</title>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    @{
+        var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? string.Empty;
+    }
+    <div class="shell">
+        <aside class="sidebar">
+            <a class="brand" asp-page="/Budget/Index">
+                <span class="brand-mark">S</span>
+                <span>
+                    <strong>Spendwise</strong>
+                </span>
+            </a>
+
+            <nav class="nav">
+                <a class="@(currentPage == "/Budget/Index" ? "active" : string.Empty)" asp-page="/Budget/Index">Budget</a>
+                <a class="@(currentPage == "/Index" ? "active" : string.Empty)" asp-page="/Index">Dashboard</a>
+                <a class="@(currentPage == "/Accounts/Index" ? "active" : string.Empty)" asp-page="/Accounts/Index">Accounts</a>
+                <a class="@(currentPage == "/Transactions/Index" ? "active" : string.Empty)" asp-page="/Transactions/Index">Transactions</a>
+                <a class="@(currentPage == "/Reports/Index" ? "active" : string.Empty)" asp-page="/Reports/Index">Reports</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <header class="topbar">
+                @if (TempData["StatusMessage"] is string message)
+                {
+                    <div class="toast">@message</div>
+                }
+            </header>
+
+            @RenderBody()
+        </main>
+    </div>
+</body>
+</html>

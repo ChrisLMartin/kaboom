@@ -1,0 +1,255 @@
+@page
+@model Spendwise.Pages.Budget.IndexModel
+@{
+    ViewData["Title"] = "Budget";
+    var startMonth = BudgetCalculator.ParseMonthKey(Model.StartMonthKey);
+    var previousMonthKey = BudgetCalculator.ToMonthKey(startMonth.AddMonths(-1));
+    var nextMonthKey = BudgetCalculator.ToMonthKey(startMonth.AddMonths(1));
+    var months = Model.VisibleMonths.ToList();
+}
+
+<section class="budget-shell">
+    <section class="budget-ribbon card">
+        <div class="month-switcher">
+            <a class="month-arrow" asp-page="/Budget/Index" asp-route-month="@previousMonthKey">‹</a>
+            <div class="month-switcher-center">
+                <p class="eyebrow">Budget allocations across multiple months</p>
+                <div class="month-tabs">
+                    @foreach (var month in months)
+                    {
+                        <a class="month-tab @(month.MonthKey == Model.StartMonthKey ? "active" : string.Empty)"
+                           asp-page="/Budget/Index"
+                           asp-route-month="@month.MonthKey">
+                            @month.MonthDate.ToString("MMM")
+                        </a>
+                    }
+                </div>
+            </div>
+            <a class="month-arrow" asp-page="/Budget/Index" asp-route-month="@nextMonthKey">›</a>
+        </div>
+
+        <div class="budget-card-track">
+            <div class="budget-card-spacer" aria-hidden="true"></div>
+            @foreach (var month in months)
+            {
+                <article class="budget-month-card @(month.MonthKey == Model.StartMonthKey ? "is-current" : string.Empty)">
+                    <div class="budget-month-card-head">
+                        <div>
+                            <span class="budget-month-label">@month.MonthDate.ToString("MMM")</span>
+                            <strong>@month.MonthDate.Year</strong>
+                        </div>
+                        <small>@month.CategoryRows.Count categories</small>
+                    </div>
+                    <p class="budget-month-meta">Available to budget</p>
+                    <div class="budget-month-total @(month.ReadyToAssign >= 0 ? "positive" : "negative")">
+                        @month.ReadyToAssign.ToString("C")
+                    </div>
+                    <div class="budget-month-stats">
+                        <span>Budgeted <strong>@month.CategoryRows.Sum(row => row.Assigned).ToString("C")</strong></span>
+                        <span>Outflows <strong>@Math.Abs(month.CategoryRows.Where(row => row.Activity < 0).Sum(row => row.Activity)).ToString("C")</strong></span>
+                        <span>Available <strong>@month.CategoryRows.Sum(row => row.Available).ToString("C")</strong></span>
+                    </div>
+                </article>
+            }
+        </div>
+    </section>
+
+    <section class="budget-tools">
+        <article class="card">
+            <h3>Add category group</h3>
+            <form method="post" asp-page-handler="AddGroup" class="stack-form">
+                <input type="hidden" name="startMonth" value="@Model.StartMonthKey" />
+                <label>
+                    <span>Group name</span>
+                    <input type="text" name="groupName" placeholder="Subscriptions" />
+                </label>
+                <button type="submit" class="secondary">Create group</button>
+            </form>
+        </article>
+
+        <article class="card">
+            <h3>Add category</h3>
+            <form method="post" asp-page-handler="AddCategory" class="stack-form">
+                <input type="hidden" name="startMonth" value="@Model.StartMonthKey" />
+                <label>
+                    <span>Group</span>
+                    <select name="groupId">
+                        @foreach (var group in Model.CategoryGroups)
+                        {
+                            <option value="@group.Id">@group.Name</option>
+                        }
+                    </select>
+                </label>
+                <label>
+                    <span>Category name</span>
+                    <input type="text" name="categoryName" placeholder="Internet" />
+                </label>
+                <label class="toggle-line">
+                    <input type="checkbox" name="isBufferCategory" value="true" />
+                    <span>Treat as next-month buffer</span>
+                </label>
+                <button type="submit" class="secondary">Create category</button>
+            </form>
+        </article>
+    </section>
+
+    <section class="card">
+        <form method="post" asp-page-handler="Save">
+            <input type="hidden" name="startMonth" value="@Model.StartMonthKey" />
+            <div class="table-wrap budget-grid-wrap">
+                <table class="data-table budget-grid">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" class="category-column">Categories</th>
+                            @foreach (var month in months)
+                            {
+                                <th colspan="3" class="month-column-group">@month.MonthDate.ToString("MMM yyyy")</th>
+                            }
+                        </tr>
+                        <tr>
+                            @foreach (var month in months)
+                            {
+                                <th>Budgeted</th>
+                                <th>Outflows</th>
+                                <th>Balance</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var group in Model.CategoryGroups)
+                        {
+                            <tr class="group-row">
+                                <td colspan="@(1 + months.Count * 3)">
+                                    <div class="budget-group-head">
+                                        <button type="button"
+                                                class="group-toggle"
+                                                data-group="@group.Id"
+                                                aria-expanded="true"
+                                                aria-label="Collapse @group.Name">
+                                            ▾
+                                        </button>
+                                        <input type="text"
+                                               class="group-name-input"
+                                               name="GroupNames[@group.Id]"
+                                               value="@group.Name"
+                                               aria-label="Group name for @group.Name" />
+                                        <span class="badge">@group.Categories.Count categories</span>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            @foreach (var category in group.Categories)
+                            {
+                                <tr class="budget-group-row" data-group="@group.Id">
+                                    <td class="category-column">
+                                        <div class="budget-category-editor">
+                                            <input type="text"
+                                                   name="CategoryNames[@category.Id]"
+                                                   value="@category.Name"
+                                                   aria-label="Category name for @category.Name" />
+                                            <label class="toggle-line">
+                                                <input type="checkbox"
+                                                       name="BufferCategoryIds"
+                                                       value="@category.Id"
+                                                       checked="@category.IsBufferCategory" />
+                                                <span>Buffer</span>
+                                            </label>
+                                        </div>
+                                    </td>
+
+                                    @foreach (var month in months)
+                                    {
+                                        var row = month.CategoryRows.FirstOrDefault(item => item.CategoryId == category.Id);
+                                        if (row is null)
+                                        {
+                                            row = new CategoryBudgetRow(group.Id, group.Name, category.Id, category.Name, category.MonthlyTarget, category.IsBufferCategory, 0m, 0m, 0m);
+                                        }
+
+                                        <td>
+                                            <input type="number"
+                                                   step="0.01"
+                                                   name="BudgetedAmounts[@(month.MonthKey + "|" + category.Id)]"
+                                                   value="@row.Assigned"
+                                                   aria-label="@($"Budgeted amount for {category.Name} in {month.MonthDate:MMMM yyyy}")" />
+                                        </td>
+                                        <td class="@(row.Activity >= 0 ? "positive" : "negative")">@row.Activity.ToString("C")</td>
+                                        <td class="@(row.Available >= 0 ? "positive" : "negative")">@row.Available.ToString("C")</td>
+                                    }
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="budget-savebar">
+                <div>
+                    <strong>Most prominent number:</strong>
+                    Ready to budget in @months[0].MonthDate.ToString("MMMM yyyy") is
+                    <span class="budget-savebar-amount">@months[0].ReadyToAssign.ToString("C")</span>
+                </div>
+                <button type="submit">Save budget changes</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="card">
+        <h3>Move money</h3>
+        <p class="inline-help">Cover overspending or reprioritize without leaving the budget screen.</p>
+        <form method="post" asp-page-handler="Move" class="form-grid">
+            <input type="hidden" name="startMonth" value="@Model.StartMonthKey" />
+            <label>
+                <span>Month</span>
+                <select name="monthToMove">
+                    @foreach (var month in months)
+                    {
+                        <option value="@month.MonthKey">@month.MonthDate.ToString("MMMM yyyy")</option>
+                    }
+                </select>
+            </label>
+            <label>
+                <span>From</span>
+                <select name="fromCategoryId">
+                    @foreach (var group in Model.CategoryGroups)
+                    {
+                        @foreach (var category in group.Categories)
+                        {
+                            <option value="@category.Id">@group.Name - @category.Name</option>
+                        }
+                    }
+                </select>
+            </label>
+            <label>
+                <span>To</span>
+                <select name="toCategoryId">
+                    @foreach (var group in Model.CategoryGroups)
+                    {
+                        @foreach (var category in group.Categories)
+                        {
+                            <option value="@category.Id">@group.Name - @category.Name</option>
+                        }
+                    }
+                </select>
+            </label>
+            <label>
+                <span>Amount</span>
+                <input type="number" step="0.01" name="amount" value="0" />
+            </label>
+            <button type="submit">Move money</button>
+        </form>
+    </section>
+</section>
+
+<script>
+    document.querySelectorAll('.group-toggle').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var groupId = button.getAttribute('data-group');
+            var isExpanded = button.getAttribute('aria-expanded') === 'true';
+            document.querySelectorAll('.budget-group-row[data-group="' + groupId + '"]').forEach(function (row) {
+                row.hidden = isExpanded;
+            });
+            button.setAttribute('aria-expanded', (!isExpanded).toString());
+            button.textContent = isExpanded ? '▸' : '▾';
+        });
+    });
+</script>

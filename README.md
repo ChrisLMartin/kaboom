@@ -20,12 +20,22 @@ Spendwise is a self-contained ASP.NET Core budgeting app inspired by zero-based 
 
 ## Run With .NET 10 SDK
 
+Tested local command:
+
 ```powershell
-dotnet restore
+dotnet run --no-launch-profile --urls http://localhost:5085
+```
+
+Then open `http://localhost:5085`.
+
+If you want the launch profile with HTTPS support, use:
+
+```powershell
+dotnet dev-certs https --trust
 dotnet run
 ```
 
-Then open `https://localhost:7275` or `http://localhost:5275`.
+The project launch settings now point at `http://localhost:5085` and `https://localhost:7085`.
 
 ## Run With Docker
 
@@ -39,4 +49,4 @@ Then open `http://localhost:8080`.
 ## Notes
 
 - The app is intentionally original and does not use YNAB branding or proprietary assets.
-- This environment does not currently have the .NET SDK installed, so I could not execute or compile the project here.
+- The native app was locally verified on `http://localhost:5085` with a successful `200 OK` response.

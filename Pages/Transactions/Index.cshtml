@@ -1,0 +1,79 @@
+@page
+@model Spendwise.Pages.Transactions.IndexModel
+@{
+    ViewData["Title"] = "Transactions";
+}
+
+<section class="register-shell">
+    <article class="card register-entry">
+        <div class="register-toolbar">
+            <div>
+                <p class="eyebrow">Transaction register</p>
+                <h2>Add a new transaction</h2>
+            </div>
+            <span class="badge">Newest transactions appear first</span>
+        </div>
+
+        <form method="post" asp-page-handler="Add" class="register-form">
+            <input type="date" name="date" value="@DateTime.Today.ToString("yyyy-MM-dd")" aria-label="Transaction date" />
+            <select name="accountId" aria-label="Account">
+                @foreach (var account in Model.Accounts)
+                {
+                    <option value="@account.Id">@account.Name</option>
+                }
+            </select>
+            <input type="text" name="payee" placeholder="Payee" aria-label="Payee" />
+            <select name="categoryId" aria-label="Category">
+                <option value="">Ready to assign / uncategorized inflow</option>
+                @foreach (var group in Model.Groups)
+                {
+                    @foreach (var category in group.Categories.OrderBy(category => category.Name))
+                    {
+                        <option value="@category.Id">@group.Name - @category.Name</option>
+                    }
+                }
+            </select>
+            <input type="text" name="notes" placeholder="Memo" aria-label="Memo" />
+            <input type="number" step="0.01" name="amount" value="0" aria-label="Amount" />
+            <button type="submit">Add transaction</button>
+        </form>
+        <p class="inline-help">Use negative numbers for outflows and positive numbers for income. The new row will land at the top of the register.</p>
+    </article>
+
+    <article class="card register-table-card">
+        <div class="register-toolbar">
+            <h3>Existing transactions</h3>
+            <span class="badge">@Model.Transactions.Count records</span>
+        </div>
+
+        <div class="table-wrap">
+            <table class="data-table register-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Account</th>
+                        <th>Payee</th>
+                        <th>Category</th>
+                        <th>Memo</th>
+                        <th>Outflow</th>
+                        <th>Inflow</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var transaction in Model.Transactions)
+                    {
+                        <tr>
+                            <td>@transaction.Date.ToString("dd MMM yyyy")</td>
+                            <td>@transaction.AccountName</td>
+                            <td><strong>@transaction.Payee</strong></td>
+                            <td>@transaction.CategoryName</td>
+                            <td>@transaction.Notes</td>
+                            <td class="negative">@(transaction.Amount < 0 ? Math.Abs(transaction.Amount).ToString("C") : string.Empty)</td>
+                            <td class="positive">@(transaction.Amount > 0 ? transaction.Amount.ToString("C") : string.Empty)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </article>
+</section>
