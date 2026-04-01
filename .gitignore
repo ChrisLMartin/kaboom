@@ -1,0 +1,61 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+out/
+publish/
+artifacts/
+TestResults/
+
+# Local app data
+App_Data/
+
+# User- and machine-specific IDE files
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.rsuser
+*.sln.docstates
+*.VC.db
+*.VC.VC.opendb
+
+# Rider / ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Visual Studio profiler and diagnostics
+*.psess
+*.vsp
+*.vspx
+*.sap
+*.e2e
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+!packages/build/
+
+# Logs and temporary runtime files
+*.log
+*.tmp
+*.temp
+*.cache
+*.pid
+*.out.txt
+*.err.txt
+
+# Generated screenshot capture helpers
+/docs/snapshots/
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Existing broad binary ignores
+*.exe
+*.dll
