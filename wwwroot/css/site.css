@@ -457,18 +457,25 @@ button.secondary,
 
 .budget-grid {
     min-width: 1120px;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
 .budget-grid thead th {
     background: #eef3e8;
     text-align: center;
     font-size: 0.92rem;
+    border-bottom: 1px solid #c7d8e3;
 }
 
 .budget-grid .month-column-group {
-    background: #dce9f2;
+    background: linear-gradient(180deg, #d5e6f1, #c5dbe8);
     color: #27465a;
     font-size: 1rem;
+    border-top: 1px solid #9dbccd;
+    border-left: 4px solid #8fb2c7;
+    border-right: 4px solid #8fb2c7;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
 .budget-grid .category-column {
@@ -479,10 +486,40 @@ button.secondary,
     background: rgba(255, 255, 255, 0.88);
 }
 
-.budget-grid tbody td:nth-child(3n + 2),
-.budget-grid tbody td:nth-child(3n + 3),
-.budget-grid tbody td:nth-child(3n + 4) {
-    background: rgba(225, 240, 250, 0.55);
+.budget-grid .month-subhead {
+    background: #edf4f8;
+    color: #536571;
+    font-size: 0.86rem;
+    border-bottom: 2px solid #bfd4df;
+}
+
+.budget-grid .month-subhead.month-start {
+    border-left: 4px solid #8fb2c7;
+    border-top-left-radius: 0.8rem;
+}
+
+.budget-grid .month-subhead.month-end {
+    border-right: 4px solid #8fb2c7;
+    border-top-right-radius: 0.8rem;
+}
+
+.budget-grid .budget-value-cell {
+    background: linear-gradient(180deg, rgba(232, 242, 248, 0.88), rgba(223, 237, 245, 0.76));
+    border-top: 1px dotted #8ac8ef;
+}
+
+.budget-grid .budget-value-cell.month-start {
+    border-left: 4px solid rgba(143, 178, 199, 0.78);
+    box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.9);
+}
+
+.budget-grid .budget-value-cell.month-end {
+    border-right: 4px solid rgba(143, 178, 199, 0.78);
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.9);
+}
+
+.budget-grid .budget-value-cell:not(.month-end) {
+    border-right: 1px dotted #b7d8ea;
 }
 
 .budget-category-editor {
@@ -510,6 +547,26 @@ button.secondary,
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    justify-content: flex-start;
+}
+
+.group-header-cell {
+    background: linear-gradient(180deg, #efe0c5, #ead6b2) !important;
+}
+
+.group-subtotal-cell {
+    background: linear-gradient(180deg, #edf5d9, #e4efd0) !important;
+    text-align: right !important;
+    font-variant-numeric: tabular-nums;
+    border-top: 1px solid #d4dfc0;
+}
+
+.group-subtotal-cell.month-start {
+    border-left: 4px solid #8fb2c7;
+}
+
+.group-subtotal-cell.month-end {
+    border-right: 4px solid #8fb2c7;
 }
 
 .group-toggle {
@@ -525,6 +582,10 @@ button.secondary,
     max-width: 320px;
     font-weight: 700;
     background: #f6fbff;
+}
+
+.budget-group-head .badge {
+    margin-left: auto;
 }
 
 .categories-heading,

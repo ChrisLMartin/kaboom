@@ -86,7 +86,7 @@
                         @foreach (var group in Model.CategoryGroups)
                         {
                             <tr class="group-row">
-                                <td colspan="@(1 + months.Count * 3)">
+                                <td class="category-column group-header-cell">
                                     <div class="budget-group-head">
                                         <input type="text"
                                                class="group-name-input"
@@ -103,6 +103,19 @@
                                         <span class="badge">@group.Categories.Count categories</span>
                                     </div>
                                 </td>
+
+                                @for (var monthIndex = 0; monthIndex < months.Count; monthIndex++)
+                                {
+                                    var month = months[monthIndex];
+                                    var monthGroupRows = month.CategoryRows.Where(item => item.GroupId == group.Id).ToList();
+                                    var groupBudgeted = monthGroupRows.Sum(item => item.Assigned);
+                                    var groupOutflows = monthGroupRows.Sum(item => item.Activity);
+                                    var groupBalance = monthGroupRows.Sum(item => item.Available);
+
+                                    <td class="group-subtotal-cell month-start">@groupBudgeted.ToString("C")</td>
+                                    <td class="group-subtotal-cell @(groupOutflows >= 0 ? "positive" : "negative")">@groupOutflows.ToString("C")</td>
+                                    <td class="group-subtotal-cell month-end @(groupBalance >= 0 ? "positive" : "negative")">@groupBalance.ToString("C")</td>
+                                }
                             </tr>
 
                             @foreach (var category in group.Categories)

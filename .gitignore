@@ -8,6 +8,8 @@ TestResults/
 
 # Local app data
 App_Data/
+/.docker/
+/.dotnet/
 
 # User- and machine-specific IDE files
 .vs/
@@ -59,3 +61,4 @@ desktop.ini
 # Existing broad binary ignores
 *.exe
 *.dll
+
