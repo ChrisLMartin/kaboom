@@ -47,7 +47,7 @@
         </div>
 
         <div class="table-wrap">
-            <table class="data-table register-table">
+            <table class="data-table register-table register-edit-table">
                 <thead>
                     <tr>
                         <th>Date</th>
@@ -55,21 +55,39 @@
                         <th>Payee</th>
                         <th>Category</th>
                         <th>Memo</th>
-                        <th>Outflow</th>
-                        <th>Inflow</th>
+                        <th>Amount</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var transaction in Model.Transactions)
                     {
                         <tr>
-                            <td>@transaction.Date.ToString("dd MMM yyyy")</td>
-                            <td>@transaction.AccountName</td>
-                            <td><strong>@transaction.Payee</strong></td>
-                            <td>@transaction.CategoryName</td>
-                            <td>@transaction.Notes</td>
-                            <td class="negative">@(transaction.Amount < 0 ? Math.Abs(transaction.Amount).ToString("C") : string.Empty)</td>
-                            <td class="positive">@(transaction.Amount > 0 ? transaction.Amount.ToString("C") : string.Empty)</td>
+                            <td colspan="7" class="register-edit-row-cell">
+                                <form method="post" asp-page-handler="Update" class="register-edit-form transaction-edit-form">
+                                    <input type="hidden" name="transactionId" value="@transaction.Id" />
+                                    <input type="date" name="date" value="@transaction.Date.ToString("yyyy-MM-dd")" aria-label="Transaction date" />
+                                    <select name="accountId" aria-label="Account">
+                                        @foreach (var account in Model.Accounts)
+                                        {
+                                            <option value="@account.Id" selected="@(account.Id == transaction.AccountId)">@account.Name</option>
+                                        }
+                                    </select>
+                                    <input type="text" name="payee" value="@transaction.Payee" placeholder="Payee" aria-label="Payee" />
+                                    <select name="categoryId" aria-label="Category">
+                                        <option value="" selected="@(string.IsNullOrWhiteSpace(transaction.CategoryId))">Ready to assign / uncategorized inflow</option>
+                                        @foreach (var group in Model.Groups)
+                                        {
+                                            @foreach (var category in group.Categories.OrderBy(category => category.Name))
+                                            {
+                                                <option value="@category.Id" selected="@(category.Id == transaction.CategoryId)">@group.Name - @category.Name</option>
+                                            }
+                                        }
+                                    </select>
+                                    <input type="text" name="notes" value="@transaction.Notes" placeholder="Memo" aria-label="Memo" />
+                                    <input type="number" step="0.01" name="amount" value="@transaction.Amount.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)" aria-label="Amount" />
+                                </form>
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -77,3 +95,43 @@
         </div>
     </article>
 </section>
+
+<script>
+    document.querySelectorAll('.transaction-edit-form').forEach(function (form) {
+        var saveTimer = null;
+
+        function requestSave(immediate) {
+            if (saveTimer) {
+                clearTimeout(saveTimer);
+            }
+
+            if (immediate) {
+                form.requestSubmit();
+                return;
+            }
+
+            saveTimer = setTimeout(function () {
+                form.requestSubmit();
+            }, 700);
+        }
+
+        form.addEventListener('change', function (event) {
+            if (event.target.matches('input, select, textarea')) {
+                requestSave(false);
+            }
+        });
+
+        form.addEventListener('focusout', function (event) {
+            if (event.target.matches('input, select, textarea')) {
+                requestSave(true);
+            }
+        });
+
+        form.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' && event.target.matches('input, select, textarea')) {
+                event.preventDefault();
+                requestSave(true);
+            }
+        });
+    });
+</script>

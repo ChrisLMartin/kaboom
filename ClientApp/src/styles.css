@@ -1,0 +1,884 @@
+:root {
+  color-scheme: light;
+  font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+  background: #eef4f8;
+  color: #173042;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(168, 217, 215, 0.5), transparent 32%),
+    linear-gradient(180deg, #eff5f9 0%, #e6edf4 100%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+  border-radius: 999px;
+  background: #1f7a88;
+  color: #fff;
+  cursor: pointer;
+  padding: 0.72rem 1.15rem;
+}
+
+button.secondary,
+.secondary {
+  background: rgba(31, 122, 136, 0.1);
+  color: #1f5060;
+}
+
+.ghost-button {
+  background: transparent;
+  color: #4a6471;
+  padding-inline: 0;
+}
+
+input,
+select {
+  width: 100%;
+  border: 1px solid rgba(54, 86, 108, 0.16);
+  border-radius: 0.9rem;
+  background: #fff;
+  color: #173042;
+  padding: 0.72rem 0.85rem;
+}
+
+label {
+  display: grid;
+  gap: 0.4rem;
+}
+
+label span,
+.eyebrow {
+  color: #647b89;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.shell {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: 350px minmax(0, 1fr);
+  min-height: 100vh;
+  padding: 1.25rem;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.3rem;
+  border-radius: 1.8rem;
+  background: linear-gradient(180deg, #123547 0%, #0f2d3c 100%);
+  color: #eef7fb;
+  box-shadow: 0 28px 70px rgba(15, 45, 60, 0.28);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0.85rem;
+  background: linear-gradient(135deg, #90d7c4, #4ec4d3);
+  color: #123547;
+  font-weight: 800;
+}
+
+.nav {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.nav a {
+  padding: 0.85rem 1rem;
+  border-radius: 0.95rem;
+  color: rgba(238, 247, 251, 0.84);
+}
+
+.nav a.active {
+  background: rgba(255, 255, 255, 0.11);
+  color: #fff;
+}
+
+.sidebar-accounts-panel {
+  display: grid;
+  gap: 1rem;
+  padding-top: 0.7rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.sidebar-accounts-head,
+.sidebar-account-item summary,
+.page-toolbar,
+.category-head,
+.group-head,
+.section-head,
+.modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sidebar-accounts-total,
+.sidebar-account-balance,
+.save-pill,
+.error-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-weight: 700;
+}
+
+.sidebar-accounts-total,
+.sidebar-account-balance,
+.save-pill {
+  background: rgba(255, 255, 255, 0.92);
+  color: #123547;
+}
+
+.sidebar-accounts-total.negative,
+.sidebar-account-balance.negative,
+.error-pill {
+  background: #fff0ef;
+  color: #a0443d;
+}
+
+.sidebar-account-groups,
+.sidebar-account-group,
+.sidebar-account-list,
+.sidebar-account-edit-grid,
+.page-shell,
+.month-metrics,
+.report-list {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.sidebar-account-kind,
+.sidebar-empty-state,
+.sidebar-error {
+  margin: 0;
+}
+
+.sidebar-empty-state,
+.sidebar-error {
+  color: rgba(238, 247, 251, 0.76);
+}
+
+.sidebar-account-item {
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+}
+
+.sidebar-account-link,
+.sidebar-account-item summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.62rem 0.8rem;
+}
+
+.sidebar-account-link {
+  color: inherit;
+}
+
+.sidebar-account-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-account-link:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-account-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.sidebar-account-edit-form {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.8rem 0.85rem 0.85rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-accounts-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sidebar-edit-account-list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.sidebar-edit-toggle {
+  padding: 0.45rem 0.8rem;
+}
+
+.sidebar-account-edit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.sidebar-account-edit-link {
+  color: #eef7fb;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-account-edit-grid {
+  grid-template-columns: minmax(0, 1.35fr) 110px auto;
+  align-items: end;
+  gap: 0.5rem;
+}
+
+.sidebar-account-edit-grid label {
+  gap: 0.25rem;
+}
+
+.sidebar-account-edit-grid input,
+.sidebar-account-edit-grid select {
+  padding: 0.42rem 0.5rem;
+  min-height: 2rem;
+}
+
+.sidebar-account-edit-grid button {
+  padding: 0.48rem 0.8rem;
+}
+
+.sidebar-account-new-form {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-account-edit-grid-new {
+  grid-template-columns: minmax(0, 1.2fr) 105px 105px auto;
+}
+
+.main {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+}
+
+.page-shell {
+  align-content: start;
+}
+
+.card,
+.budget-month-card,
+.budget-table-wrap {
+  border-radius: 1.4rem;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 18px 40px rgba(20, 43, 58, 0.09);
+}
+
+.card,
+.budget-month-card {
+  padding: 1.25rem;
+}
+
+.month-switcher,
+.page-status,
+.reports-grid,
+.register-add-form {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.page-status {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.page-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.page-title-toolbar {
+  align-items: start;
+}
+
+.page-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.page-title {
+  margin: 0;
+  font-size: 1.45rem;
+  line-height: 1.1;
+}
+
+.filter-pill,
+.filter-muted {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+}
+
+.filter-pill {
+  padding: 0.32rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(31, 122, 136, 0.12);
+  color: #1f5060;
+  font-weight: 700;
+}
+
+.filter-muted {
+  color: #627783;
+}
+
+.available-panel {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1.05rem 1rem 0.95rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #3c515e 0%, #2f414d 100%);
+  color: #f7fbfd;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.available-panel span {
+  color: rgba(247, 251, 253, 0.82);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.available-panel strong {
+  font-size: 2rem;
+  line-height: 1.05;
+}
+
+.month-metrics {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.month-metrics dt,
+.month-metrics dd {
+  margin: 0;
+}
+
+.month-metrics dd {
+  font-weight: 700;
+}
+
+.budget-table-wrap,
+.register-table-wrap {
+  overflow: auto;
+}
+
+.budget-grid,
+.register-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.budget-grid th,
+.budget-grid td,
+.register-table th,
+.register-table td {
+  padding: 0.8rem;
+  border-bottom: 1px solid rgba(27, 57, 75, 0.08);
+  vertical-align: top;
+  text-align: left;
+}
+
+.budget-grid thead th,
+.register-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f4f8fb;
+  z-index: 1;
+}
+
+.category-column {
+  min-width: 280px;
+  width: 280px;
+  background: #fff;
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+
+.month-subhead {
+  text-align: center;
+}
+
+.month-subhead {
+  color: #5f7280;
+  font-size: 0.83rem;
+}
+
+.month-card-row th {
+  padding: 0.2rem 0.35rem 0.45rem;
+  background: transparent;
+  border-bottom: 0;
+  position: static;
+}
+
+.month-card-spacer {
+  background: transparent;
+  box-shadow: none;
+}
+
+.month-card-spacer-content {
+  display: grid;
+  gap: 0.8rem;
+  align-content: center;
+  min-height: 100%;
+  padding: 0.7rem 0.9rem 0.85rem 0.35rem;
+}
+
+.month-picker-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.month-picker-field input {
+  max-width: 170px;
+}
+
+.month-card-status {
+  justify-content: flex-start;
+}
+
+.month-card-head {
+  background: transparent;
+  position: relative;
+}
+
+.budget-month-card {
+  padding: 0.85rem 0.95rem 0.95rem;
+  border: 1px solid rgba(62, 86, 100, 0.14);
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #eef3f6 0%, #e5ecef 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.budget-month-card .eyebrow {
+  margin-bottom: 0.5rem;
+}
+
+.month-nav-button {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border-radius: 999px;
+  background: rgba(31, 122, 136, 0.14);
+  color: #22495a;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.month-nav-button-prev {
+  left: -0.9rem;
+}
+
+.month-nav-button-next {
+  right: -0.9rem;
+}
+
+.month-breakdown-list {
+  display: grid;
+  gap: 0.22rem;
+  margin-bottom: 0.7rem;
+}
+
+.month-breakdown-row {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 0.5rem;
+  align-items: baseline;
+  color: #5f6f79;
+  font-size: 0.76rem;
+  line-height: 1.25;
+}
+
+.month-breakdown-amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.month-breakdown-amount.positive {
+  color: #2d6f4a;
+}
+
+.month-breakdown-amount.negative {
+  color: #9a4e44;
+}
+
+.month-breakdown-amount.neutral {
+  color: #54656f;
+}
+
+.month-summary-row th {
+  background: #f5f7ee;
+}
+
+.month-summary-cell {
+  padding: 0.55rem 0.45rem 0.65rem;
+  text-align: right;
+  background: #eef1e8;
+}
+
+.month-summary-cell .month-subhead,
+.month-summary-cell strong {
+  display: block;
+  text-align: right;
+}
+
+.month-summary-cell strong {
+  margin-top: 0.18rem;
+  color: #51636b;
+  font-size: 0.96rem;
+}
+
+.month-block-start {
+  border-left: 3px solid #bfd0da;
+}
+
+.month-block-end {
+  border-right: 3px solid #bfd0da;
+}
+
+.month-card-head.month-cluster-first,
+.month-summary-cell.first-visible-month,
+.group-cell.first-visible-month,
+.budgeted-cell.first-visible-month {
+  border-left-color: #97b6c5;
+}
+
+.month-card-head.month-cluster-last,
+.month-summary-cell.last-visible-month,
+.group-cell.last-visible-month,
+.metric-cell.last-visible-month {
+  border-right-color: #97b6c5;
+}
+
+.group-row th,
+.group-cell {
+  background: #deebf2;
+  font-weight: 700;
+}
+
+.group-cell {
+  text-align: right;
+}
+
+.inline-name-input {
+  border: 0;
+  border-radius: 0.85rem;
+  background: transparent;
+  padding-inline: 0;
+  font-weight: 700;
+}
+
+.category-name-input {
+  font-weight: 500;
+}
+
+.collapse-button,
+.plus-button {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: 999px;
+}
+
+.plus-button {
+  background: rgba(31, 122, 136, 0.1);
+  color: #1f5060;
+}
+
+.budget-input {
+  min-width: 110px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.budgeted-cell {
+  background: rgba(219, 237, 245, 0.62);
+}
+
+.metric-cell {
+  background: rgba(244, 247, 249, 0.94);
+}
+
+.budget-grid tbody .category-column {
+  background: #fcfdff;
+}
+
+.budget-grid tbody td {
+  text-align: right;
+}
+
+.budget-grid tbody tr:hover td,
+.budget-grid tbody tr:hover .category-column {
+  background-color: #f7fafc;
+}
+
+.register-card,
+.reports-grid {
+  gap: 1rem;
+}
+
+.register-table input,
+.register-table select {
+  border-radius: 0.45rem;
+  padding: 0.38rem 0.52rem;
+  min-height: 2rem;
+  border-color: rgba(54, 86, 108, 0.12);
+}
+
+.register-table input,
+.register-table select {
+  min-width: 0;
+}
+
+.register-table th,
+.register-table td {
+  padding: 0.32rem 0.42rem;
+  line-height: 1.2;
+}
+
+.register-table thead th {
+  font-size: 0.78rem;
+  color: #627783;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.register-table thead th:last-child {
+  text-align: left;
+}
+
+.register-header-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.header-filter {
+  position: relative;
+}
+
+.header-filter summary {
+  list-style: none;
+  cursor: pointer;
+  color: #627783;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.header-filter summary.active {
+  color: #1f5060;
+}
+
+.header-filter summary::-webkit-details-marker {
+  display: none;
+}
+
+.header-filter-menu {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  right: 0;
+  z-index: 3;
+  display: grid;
+  gap: 0.35rem;
+  min-width: 180px;
+  max-height: 220px;
+  overflow: auto;
+  padding: 0.75rem;
+  border: 1px solid rgba(44, 76, 96, 0.12);
+  border-radius: 0.8rem;
+  background: #fff;
+  box-shadow: 0 18px 36px rgba(16, 34, 46, 0.14);
+}
+
+.header-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-filter-option input {
+  width: auto;
+  margin: 0;
+}
+
+.filter-empty {
+  margin: 0;
+  color: #6f7f88;
+  font-size: 0.82rem;
+}
+
+.register-table tbody tr:nth-child(even) td {
+  background: rgba(246, 249, 251, 0.85);
+}
+
+.register-new-row td {
+  background: rgba(222, 241, 246, 0.72);
+}
+
+.register-table td:last-child {
+  text-align: right;
+}
+
+.register-table td:last-child input {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.reports-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.report-row,
+.target-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.95rem 0;
+  border-bottom: 1px solid rgba(27, 57, 75, 0.08);
+}
+
+.report-row:last-child,
+.target-row:last-child {
+  border-bottom: 0;
+}
+
+.report-row p,
+.target-row p {
+  margin: 0.2rem 0 0;
+  color: #60717d;
+}
+
+.target-meta {
+  display: grid;
+  gap: 0.45rem;
+  min-width: 220px;
+  text-align: right;
+}
+
+.target-meta progress {
+  width: 100%;
+  height: 0.7rem;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(14, 31, 41, 0.45);
+  padding: 1rem;
+}
+
+.modal-card {
+  width: min(480px, 100%);
+  padding: 1.25rem;
+  border-radius: 1.4rem;
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(10, 22, 33, 0.22);
+}
+
+.modal-form {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.empty-state {
+  padding: 2rem;
+  border-radius: 1.4rem;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+@media (max-width: 1100px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    order: 2;
+  }
+
+  .main {
+    order: 1;
+  }
+
+  .budget-months,
+  .reports-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .register-add-form {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar-account-edit-grid,
+  .sidebar-account-edit-grid-new {
+    grid-template-columns: 1fr;
+  }
+}

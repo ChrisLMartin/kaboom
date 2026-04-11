@@ -41,6 +41,11 @@ _ReSharper*/
 packages/
 !packages/build/
 
+# Frontend artifacts
+ClientApp/node_modules/
+ClientApp/dist/
+ClientApp/.vite/
+
 # Logs and temporary runtime files
 *.log
 *.tmp

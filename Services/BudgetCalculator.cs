@@ -4,25 +4,6 @@ namespace Spendwise.Services;
 
 public sealed class BudgetCalculator
 {
-    public DashboardViewModel BuildDashboard(BudgetData data, string monthKey)
-    {
-        var month = BuildMonth(data, monthKey);
-        var thisMonthSpent = month.CategoryRows.Sum(row => Math.Min(row.Activity, 0m));
-        var trueExpenseFund = month.CategoryRows
-            .Where(row => row.Target > 0)
-            .Sum(row => Math.Min(row.Available, row.Target));
-
-        return new DashboardViewModel(
-            month,
-            data.Transactions
-                .OrderByDescending(transaction => transaction.Date)
-                .Take(6)
-                .Select(transaction => BuildTransactionListItem(data, transaction))
-                .ToList(),
-            Math.Abs(thisMonthSpent),
-            trueExpenseFund);
-    }
-
     public BudgetMonthViewModel BuildMonth(BudgetData data, string monthKey)
     {
         var monthDate = ParseMonthKey(monthKey);
@@ -189,7 +170,9 @@ public sealed class BudgetCalculator
         return new TransactionListItem(
             transaction.Id,
             transaction.Date,
+            transaction.AccountId,
             accountName,
+            transaction.CategoryId,
             categoryName,
             transaction.Payee,
             transaction.Notes,
@@ -296,16 +279,12 @@ public sealed record CategoryBudgetRow(
     decimal Activity,
     decimal Available);
 
-public sealed record DashboardViewModel(
-    BudgetMonthViewModel Month,
-    IReadOnlyList<TransactionListItem> RecentTransactions,
-    decimal SpentThisMonth,
-    decimal ProtectedForTrueExpenses);
-
 public sealed record TransactionListItem(
     string Id,
     DateTime Date,
+    string AccountId,
     string AccountName,
+    string? CategoryId,
     string CategoryName,
     string Payee,
     string Notes,

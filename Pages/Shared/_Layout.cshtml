@@ -1,3 +1,4 @@
+@inject IBudgetRepository BudgetRepository
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +10,33 @@
 <body>
     @{
         var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? string.Empty;
+        var currentUrl = $"{Context.Request.Path}{Context.Request.QueryString}";
+        var sidebarData = await BudgetRepository.GetAsync();
+        var trackedTotal = sidebarData.Accounts.Sum(account => account.Balance);
+
+        static int AccountKindOrder(AccountKind kind) => kind switch
+        {
+            AccountKind.Checking => 0,
+            AccountKind.Savings => 1,
+            AccountKind.CreditCard => 2,
+            AccountKind.Cash => 3,
+            _ => 4
+        };
+
+        static string AccountKindLabel(AccountKind kind) => kind switch
+        {
+            AccountKind.Checking => "Checking",
+            AccountKind.Savings => "Savings",
+            AccountKind.CreditCard => "Credit Cards",
+            AccountKind.Cash => "Cash",
+            _ => kind.ToString()
+        };
+
+        var accountsByKind = sidebarData.Accounts
+            .OrderBy(account => AccountKindOrder(account.Kind))
+            .ThenBy(account => account.Name)
+            .GroupBy(account => account.Kind)
+            .ToList();
     }
     <div class="shell">
         <aside class="sidebar">
@@ -21,11 +49,75 @@
 
             <nav class="nav">
                 <a class="@(currentPage == "/Budget/Index" ? "active" : string.Empty)" asp-page="/Budget/Index">Budget</a>
-                <a class="@(currentPage == "/Index" ? "active" : string.Empty)" asp-page="/Index">Dashboard</a>
-                <a class="@(currentPage == "/Accounts/Index" ? "active" : string.Empty)" asp-page="/Accounts/Index">Accounts</a>
                 <a class="@(currentPage == "/Transactions/Index" ? "active" : string.Empty)" asp-page="/Transactions/Index">Transactions</a>
                 <a class="@(currentPage == "/Reports/Index" ? "active" : string.Empty)" asp-page="/Reports/Index">Reports</a>
             </nav>
+
+            <section class="sidebar-accounts-panel">
+                <div class="sidebar-accounts-head">
+                    <div>
+                        <p class="eyebrow">Accounts</p>
+                        <strong>All accounts</strong>
+                    </div>
+                    <span class="sidebar-accounts-total @(trackedTotal >= 0 ? "positive" : "negative")">@trackedTotal.ToString("C")</span>
+                </div>
+
+                <div class="sidebar-account-groups">
+                    @if (accountsByKind.Count == 0)
+                    {
+                        <p class="sidebar-empty-state">No accounts yet.</p>
+                    }
+                    else
+                    {
+                        @foreach (var group in accountsByKind)
+                        {
+                            <div class="sidebar-account-group">
+                                <p class="sidebar-account-kind">@AccountKindLabel(group.Key)</p>
+                                <div class="sidebar-account-list">
+                                    @foreach (var account in group)
+                                    {
+                                        <details class="sidebar-account-item">
+                                            <summary>
+                                                <span class="sidebar-account-name">@account.Name</span>
+                                                <span class="sidebar-account-balance @(account.Balance >= 0 ? "positive" : "negative")">@account.Balance.ToString("C")</span>
+                                            </summary>
+                                            <form method="post" asp-page="/Accounts/Index" asp-page-handler="UpdateBalance" class="sidebar-account-edit-form">
+                                                <input type="hidden" name="accountId" value="@account.Id" />
+                                                <input type="hidden" name="returnUrl" value="@currentUrl" />
+                                                <label>
+                                                    <span>Balance</span>
+                                                    <input type="number" step="0.01" name="balance" value="@account.Balance" />
+                                                </label>
+                                                <button type="submit" class="secondary">Save balance</button>
+                                            </form>
+                                        </details>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+
+                <details class="sidebar-add-account">
+                    <summary>Add account</summary>
+                    <form method="post" asp-page="/Accounts/Index" asp-page-handler="Add" class="sidebar-add-account-form">
+                        <input type="hidden" name="returnUrl" value="@currentUrl" />
+                        <label>
+                            <span>Name</span>
+                            <input type="text" name="name" placeholder="Offset account" />
+                        </label>
+                        <label>
+                            <span>Type</span>
+                            <select name="kind" asp-items="Html.GetEnumSelectList<AccountKind>()"></select>
+                        </label>
+                        <label>
+                            <span>Starting balance</span>
+                            <input type="number" step="0.01" name="balance" value="0" />
+                        </label>
+                        <button type="submit">Create account</button>
+                    </form>
+                </details>
+            </section>
         </aside>
 
         <main class="main">

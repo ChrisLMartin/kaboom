@@ -388,8 +388,8 @@ button.secondary,
 .budget-month-card {
     padding: 1rem;
     border-radius: 1.1rem;
-    background: rgba(7, 15, 22, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: linear-gradient(180deg, rgba(12, 22, 31, 0.82), rgba(24, 37, 49, 0.92));
+    border: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .budget-month-card.is-current {
@@ -418,13 +418,31 @@ button.secondary,
     text-transform: uppercase;
     letter-spacing: 0.08em;
     font-size: 0.8rem;
-    color: rgba(238, 246, 251, 0.72);
+    color: rgba(238, 246, 251, 0.88);
 }
 
 .budget-month-total {
     font-size: 2.2rem;
     font-weight: 700;
     line-height: 1;
+    margin-top: 0.45rem;
+    padding: 0.8rem 1rem 0.9rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.budget-month-total.positive {
+    background: linear-gradient(180deg, rgba(222, 245, 231, 0.98), rgba(197, 231, 212, 0.98));
+    border-color: rgba(118, 176, 145, 0.5);
+    color: #16372b;
+}
+
+.budget-month-total.negative {
+    background: linear-gradient(180deg, rgba(252, 226, 219, 0.98), rgba(241, 201, 191, 0.98));
+    border-color: rgba(177, 93, 77, 0.48);
+    color: #5f2318;
 }
 
 .budget-month-stats {
@@ -728,6 +746,210 @@ button.secondary,
     }
 
     .register-form {
+        grid-template-columns: 1fr;
+    }
+}
+
+.sidebar {
+    justify-content: flex-start;
+}
+
+.sidebar-accounts-panel {
+    margin-top: 0;
+    padding-top: 1.2rem;
+    border-top: 1px solid rgba(247, 239, 227, 0.16);
+    display: grid;
+    gap: 1rem;
+    background: linear-gradient(180deg, rgba(47, 106, 141, 0.18), rgba(255, 255, 255, 0.03));
+    border-radius: 1.1rem;
+    padding: 1rem;
+}
+
+.sidebar-accounts-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: end;
+}
+
+.sidebar-accounts-head .eyebrow,
+.sidebar-account-kind,
+.sidebar-empty-state,
+.sidebar-add-account-form label span,
+.sidebar-account-edit-form label span {
+    color: rgba(247, 239, 227, 0.68);
+}
+
+.sidebar-accounts-total,
+.sidebar-account-balance {
+    font-variant-numeric: tabular-nums;
+}
+
+.sidebar-accounts-total {
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(255, 250, 243, 0.92);
+    font-weight: 700;
+}
+
+.sidebar-account-groups {
+    display: grid;
+    gap: 0.9rem;
+    max-height: 40vh;
+    overflow-y: auto;
+    padding-right: 0.2rem;
+}
+
+.sidebar-account-group {
+    display: grid;
+    gap: 0.45rem;
+}
+
+.sidebar-account-kind {
+    margin: 0;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.sidebar-account-list {
+    display: grid;
+    gap: 0.35rem;
+}
+
+.sidebar-account-item {
+    border-radius: 0.9rem;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    overflow: hidden;
+}
+
+.sidebar-account-item summary,
+.sidebar-add-account summary {
+    list-style: none;
+    cursor: pointer;
+}
+
+.sidebar-account-item summary::-webkit-details-marker,
+.sidebar-add-account summary::-webkit-details-marker {
+    display: none;
+}
+
+.sidebar-account-item summary {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.8rem;
+    align-items: center;
+    padding: 0.75rem 0.85rem;
+}
+
+.sidebar-account-name {
+    color: #f7efe3;
+    font-weight: 700;
+}
+
+.sidebar-account-balance {
+    padding: 0.28rem 0.62rem;
+    border-radius: 999px;
+    background: rgba(255, 250, 243, 0.95);
+    font-weight: 700;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.sidebar-account-balance.positive,
+.sidebar-accounts-total.positive {
+    color: #16372b;
+    background: linear-gradient(180deg, rgba(222, 245, 231, 0.98), rgba(197, 231, 212, 0.98));
+}
+
+.sidebar-account-balance.negative,
+.sidebar-accounts-total.negative {
+    color: #5f2318;
+    background: linear-gradient(180deg, rgba(252, 226, 219, 0.98), rgba(241, 201, 191, 0.98));
+}
+
+.sidebar-account-edit-form,
+.sidebar-add-account-form {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.sidebar-account-edit-form {
+    padding: 0 0.85rem 0.85rem;
+}
+
+.sidebar-account-edit-form input,
+.sidebar-add-account-form input,
+.sidebar-add-account-form select {
+    background: rgba(255, 250, 243, 0.96);
+}
+
+.sidebar-account-edit-form button,
+.sidebar-add-account-form button {
+    width: 100%;
+}
+
+.sidebar-add-account {
+    border-radius: 0.95rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-add-account summary {
+    padding: 0.8rem 0.95rem;
+    color: #f7efe3;
+    font-weight: 700;
+}
+
+.sidebar-add-account[open] summary {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-add-account-form {
+    padding: 0.9rem 0.95rem 0.95rem;
+}
+
+.sidebar-empty-state {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+@media (max-width: 980px) {
+    .sidebar-accounts-panel {
+        margin-top: 0;
+    }
+
+    .sidebar-account-groups {
+        max-height: none;
+    }
+}
+
+
+.register-edit-table td.register-edit-row-cell {
+    padding: 0;
+    border-bottom: 1px solid var(--line);
+}
+
+.register-edit-form {
+    display: grid;
+    grid-template-columns: 140px 180px 1.2fr 1.2fr 1.1fr 140px;
+    gap: 0.6rem;
+    align-items: center;
+    padding: 0.7rem 0.65rem;
+}
+
+.register-edit-form input,
+.register-edit-form select,
+.register-edit-form button {
+    margin: 0;
+}
+
+.register-edit-form button {
+    width: 100%;
+}
+
+@media (max-width: 980px) {
+    .register-edit-form {
         grid-template-columns: 1fr;
     }
 }

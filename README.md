@@ -1,6 +1,8 @@
 # Spendwise
 
-Spendwise is a self-contained ASP.NET Core budgeting app inspired by zero-based budgeting principles:
+Spendwise is a budgeting app with an ASP.NET Core API backend, a React frontend, and PostgreSQL persistence.
+
+It follows a zero-based budgeting approach:
 
 - Give every dollar a job.
 - Prepare for less frequent expenses.
@@ -10,11 +12,11 @@ Spendwise is a self-contained ASP.NET Core budgeting app inspired by zero-based 
 ## Included
 
 - Account tracking with current balances.
-- Category groups and category targets.
+- Category groups and categories managed from the budget screen.
 - Monthly budget screen with assigned, activity, and available amounts.
-- Move-money workflow to adapt when plans change.
-- Transaction entry that updates account balances.
-- Dashboard and reports for spending and category progress.
+- Transaction register with inline editing and newest-first ordering.
+- Reports for spending and category progress.
+- React SPA frontend served by the ASP.NET host after build.
 - PostgreSQL persistence with automatic schema creation on startup.
 - One-time import from `App_Data/budget-data.json` when the database is empty.
 
@@ -52,11 +54,44 @@ docker compose down -v
 docker compose up -d postgres
 ```
 
-## Run With .NET 10 SDK
+## Run the App
+
+There are two good local workflows:
+
+1. React dev mode:
+   - Vite serves the frontend on `http://localhost:5173`
+   - ASP.NET serves the API on `http://localhost:5085`
+2. Built SPA mode:
+   - build the frontend into `ClientApp/dist`
+   - ASP.NET serves both the API and the built frontend on `http://localhost:5085`
+
+### React Dev Mode
 
 With PostgreSQL running:
 
 ```powershell
+dotnet run --no-launch-profile --urls http://localhost:5085
+```
+
+In a second terminal:
+
+```powershell
+cd ClientApp
+npm install
+npm run dev
+```
+
+Then open `http://localhost:5173`.
+
+### Built SPA Mode
+
+With PostgreSQL running:
+
+```powershell
+cd ClientApp
+npm install
+npm run build
+cd ..
 dotnet run --no-launch-profile --urls http://localhost:5085
 ```
 
@@ -68,7 +103,7 @@ On first startup, Spendwise will:
 - import `App_Data/budget-data.json` if the database is empty
 - otherwise just use the existing database data
 
-If you want the launch profile with HTTPS support, use:
+If you want the ASP.NET launch profile with HTTPS support, use:
 
 ```powershell
 dotnet dev-certs https --trust
@@ -79,9 +114,22 @@ The project launch settings point at `http://localhost:5085` and `https://localh
 
 If port `5432` is already in use on your machine, change the published port in `compose.yaml` and update the `Port=` value in the `Spendwise` connection string to match.
 
+## API Surface
+
+The frontend talks to narrower screen/domain-focused endpoints under `/api`:
+
+- `/api/budget?month=2026-04&months=3`
+- `/api/budget/allocations`
+- `/api/transactions`
+- `/api/accounts`
+- `/api/categories`
+- `/api/reports?month=2026-04`
+
+That keeps the frontend from depending on a single monolithic app-state response.
+
 ## Run the App Container
 
-The included `Dockerfile` builds the app itself. For local development, the best workflow is usually:
+The included `Dockerfile` builds the ASP.NET host. For local development, the best workflow is usually:
 
 - PostgreSQL in Docker
 - the ASP.NET app running natively with `dotnet run`

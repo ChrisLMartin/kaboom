@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+using Spendwise.Api;
 using Spendwise.Data;
 using Spendwise.Services;
 
@@ -16,20 +18,28 @@ builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionPath))
     .SetApplicationName("Spendwise");
 
-builder.Services.AddRazorPages(options =>
-{
-    options.Conventions.AddPageRoute("/Budget/Index", "");
-});
-
 builder.Services.AddDbContextFactory<SpendwiseDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Spendwise")));
 
 builder.Services.AddScoped<PostgresBudgetRepository>();
 builder.Services.AddScoped<IBudgetRepository>(serviceProvider => serviceProvider.GetRequiredService<PostgresBudgetRepository>());
 builder.Services.AddScoped<DatabaseBootstrapper>();
+builder.Services.AddScoped<SpendwiseApiService>();
 builder.Services.AddSingleton<BudgetCalculator>();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ClientApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "https://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
+var clientDistPath = Path.Combine(app.Environment.ContentRootPath, "ClientApp", "dist");
+var hasClientDist = Directory.Exists(clientDistPath);
+var clientFileProvider = hasClientDist ? new PhysicalFileProvider(clientDistPath) : null;
 
 await using (var scope = app.Services.CreateAsyncScope())
 {
@@ -39,13 +49,43 @@ await using (var scope = app.Services.CreateAsyncScope())
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
+    app.UseExceptionHandler(errorApp =>
+    {
+        errorApp.Run(async context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsJsonAsync(new { message = "An unexpected error occurred." });
+        });
+    });
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+if (clientFileProvider is not null)
+{
+    app.UseDefaultFiles(new DefaultFilesOptions
+    {
+        FileProvider = clientFileProvider
+    });
+
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = clientFileProvider
+    });
+}
+
 app.UseStaticFiles();
 app.UseRouting();
-app.MapRazorPages();
+app.UseCors("ClientApp");
+app.MapSpendwiseApi();
+
+if (clientFileProvider is not null)
+{
+    app.MapFallbackToFile("{*path:nonfile}", "index.html", new StaticFileOptions
+    {
+        FileProvider = clientFileProvider
+    });
+}
 
 app.Run();

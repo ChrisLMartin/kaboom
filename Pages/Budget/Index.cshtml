@@ -13,7 +13,6 @@
         <div class="month-switcher">
             <a class="month-arrow" asp-page="/Budget/Index" asp-route-month="@previousMonthKey">‹</a>
             <div class="month-switcher-center">
-                <p class="eyebrow">Budget allocations across multiple months</p>
                 <div class="month-tabs">
                     @foreach (var month in months)
                     {
@@ -32,7 +31,8 @@
             <div class="budget-card-spacer" aria-hidden="true"></div>
             @foreach (var month in months)
             {
-                <article class="budget-month-card @(month.MonthKey == Model.StartMonthKey ? "is-current" : string.Empty)">
+                <article class="budget-month-card @(month.MonthKey == Model.StartMonthKey ? "is-current" : string.Empty)"
+                         data-month-summary="@month.MonthKey">
                     <div class="budget-month-card-head">
                         <div>
                             <span class="budget-month-label">@month.MonthDate.ToString("MMM")</span>
@@ -41,13 +41,14 @@
                         <small>@month.CategoryRows.Count categories</small>
                     </div>
                     <p class="budget-month-meta">Available to budget</p>
-                    <div class="budget-month-total @(month.ReadyToAssign >= 0 ? "positive" : "negative")">
+                    <div class="budget-month-total @(month.ReadyToAssign >= 0 ? "positive" : "negative")"
+                         data-summary-ready>
                         @month.ReadyToAssign.ToString("C")
                     </div>
                     <div class="budget-month-stats">
-                        <span>Budgeted <strong>@month.CategoryRows.Sum(row => row.Assigned).ToString("C")</strong></span>
-                        <span>Outflows <strong>@Math.Abs(month.CategoryRows.Where(row => row.Activity < 0).Sum(row => row.Activity)).ToString("C")</strong></span>
-                        <span>Available <strong>@month.CategoryRows.Sum(row => row.Available).ToString("C")</strong></span>
+                        <span>Budgeted <strong data-summary-budgeted>@month.CategoryRows.Sum(row => row.Assigned).ToString("C")</strong></span>
+                        <span>Outflows <strong data-summary-outflows>@Math.Abs(month.CategoryRows.Where(row => row.Activity < 0).Sum(row => row.Activity)).ToString("C")</strong></span>
+                        <span>Available <strong data-summary-available>@month.CategoryRows.Sum(row => row.Available).ToString("C")</strong></span>
                     </div>
                 </article>
             }
@@ -112,9 +113,18 @@
                                     var groupOutflows = monthGroupRows.Sum(item => item.Activity);
                                     var groupBalance = monthGroupRows.Sum(item => item.Available);
 
-                                    <td class="group-subtotal-cell month-start">@groupBudgeted.ToString("C")</td>
-                                    <td class="group-subtotal-cell @(groupOutflows >= 0 ? "positive" : "negative")">@groupOutflows.ToString("C")</td>
-                                    <td class="group-subtotal-cell month-end @(groupBalance >= 0 ? "positive" : "negative")">@groupBalance.ToString("C")</td>
+                                    <td class="group-subtotal-cell month-start"
+                                        data-group-id="@group.Id"
+                                        data-month-key="@month.MonthKey"
+                                        data-group-field="budgeted">@groupBudgeted.ToString("C")</td>
+                                    <td class="group-subtotal-cell @(groupOutflows >= 0 ? "positive" : "negative")"
+                                        data-group-id="@group.Id"
+                                        data-month-key="@month.MonthKey"
+                                        data-group-field="outflows">@groupOutflows.ToString("C")</td>
+                                    <td class="group-subtotal-cell month-end @(groupBalance >= 0 ? "positive" : "negative")"
+                                        data-group-id="@group.Id"
+                                        data-month-key="@month.MonthKey"
+                                        data-group-field="balance">@groupBalance.ToString("C")</td>
                                 }
                             </tr>
 
@@ -140,14 +150,21 @@
                                         }
 
                                         <td class="budget-value-cell month-start">
-                                            <input type="number"
+                                            <input type="text"
+                                                   inputmode="decimal"
                                                    step="0.01"
+                                                   data-budget-input
+                                                   data-category-id="@category.Id"
+                                                   data-month-key="@month.MonthKey"
                                                    name="BudgetedAmounts[@(month.MonthKey + "|" + category.Id)]"
-                                                   value="@row.Assigned"
+                                                   value="@row.Assigned.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)"
                                                    aria-label="@($"Budgeted amount for {category.Name} in {month.MonthDate:MMMM yyyy}")" />
                                         </td>
                                         <td class="budget-value-cell @(row.Activity >= 0 ? "positive" : "negative")">@row.Activity.ToString("C")</td>
-                                        <td class="budget-value-cell month-end @(row.Available >= 0 ? "positive" : "negative")">@row.Available.ToString("C")</td>
+                                        <td class="budget-value-cell month-end @(row.Available >= 0 ? "positive" : "negative")"
+                                            data-category-id="@category.Id"
+                                            data-month-key="@month.MonthKey"
+                                            data-category-field="available">@row.Available.ToString("C")</td>
                                     }
                                 </tr>
                             }
@@ -157,59 +174,8 @@
             </div>
 
             <div class="budget-savebar">
-                <div>
-                    <strong>Most prominent number:</strong>
-                    Ready to budget in @months[0].MonthDate.ToString("MMMM yyyy") is
-                    <span class="budget-savebar-amount">@months[0].ReadyToAssign.ToString("C")</span>
-                </div>
                 <div class="autosave-status" id="budget-autosave-status">Changes save automatically.</div>
             </div>
-        </form>
-    </section>
-
-    <section class="card">
-        <h3>Move money</h3>
-        <p class="inline-help">Cover overspending or reprioritize without leaving the budget screen.</p>
-        <form method="post" asp-page-handler="Move" class="form-grid">
-            <input type="hidden" name="startMonth" value="@Model.StartMonthKey" />
-            <label>
-                <span>Month</span>
-                <select name="monthToMove">
-                    @foreach (var month in months)
-                    {
-                        <option value="@month.MonthKey">@month.MonthDate.ToString("MMMM yyyy")</option>
-                    }
-                </select>
-            </label>
-            <label>
-                <span>From</span>
-                <select name="fromCategoryId">
-                    @foreach (var group in Model.CategoryGroups)
-                    {
-                        @foreach (var category in group.Categories)
-                        {
-                            <option value="@category.Id">@group.Name - @category.Name</option>
-                        }
-                    }
-                </select>
-            </label>
-            <label>
-                <span>To</span>
-                <select name="toCategoryId">
-                    @foreach (var group in Model.CategoryGroups)
-                    {
-                        @foreach (var category in group.Categories)
-                        {
-                            <option value="@category.Id">@group.Name - @category.Name</option>
-                        }
-                    }
-                </select>
-            </label>
-            <label>
-                <span>Amount</span>
-                <input type="number" step="0.01" name="amount" value="0" />
-            </label>
-            <button type="submit">Move money</button>
         </form>
     </section>
 </section>
@@ -288,6 +254,7 @@
     var autosaveTimer = null;
     var autosaveInFlight = false;
     var autosaveQueued = false;
+    var committedBudgetInput = null;
 
     function syncGroupMode() {
         var selected = document.querySelector('input[name="groupMode"]:checked');
@@ -303,6 +270,88 @@
 
         autosaveStatus.textContent = message;
         autosaveStatus.dataset.state = state || '';
+    }
+
+    function applySummaryState(element, value) {
+        if (!element) {
+            return;
+        }
+
+        element.classList.toggle('positive', value >= 0);
+        element.classList.toggle('negative', value < 0);
+    }
+
+    function updateBudgetSummaries(months) {
+        if (!Array.isArray(months)) {
+            return;
+        }
+
+        months.forEach(function (month) {
+            var card = document.querySelector('[data-month-summary="' + month.monthKey + '"]');
+            if (!card) {
+                return;
+            }
+
+            var ready = card.querySelector('[data-summary-ready]');
+            var budgeted = card.querySelector('[data-summary-budgeted]');
+            var outflows = card.querySelector('[data-summary-outflows]');
+            var available = card.querySelector('[data-summary-available]');
+
+            if (ready) {
+                ready.textContent = month.readyToAssignFormatted;
+                applySummaryState(ready, month.readyToAssign);
+            }
+
+            if (budgeted) {
+                budgeted.textContent = month.budgetedFormatted;
+            }
+
+            if (outflows) {
+                outflows.textContent = month.outflowsFormatted;
+            }
+
+            if (available) {
+                available.textContent = month.availableFormatted;
+            }
+
+            if (Array.isArray(month.rows)) {
+                month.rows.forEach(function (row) {
+                    var budgetInput = document.querySelector('[data-budget-input][data-month-key="' + month.monthKey + '"][data-category-id="' + row.categoryId + '"]');
+                    var availableCell = document.querySelector('[data-category-field="available"][data-month-key="' + month.monthKey + '"][data-category-id="' + row.categoryId + '"]');
+
+                    if (budgetInput && (document.activeElement !== budgetInput || committedBudgetInput === budgetInput)) {
+                        budgetInput.value = row.assignedInput;
+                    }
+
+                    if (availableCell) {
+                        availableCell.textContent = row.availableFormatted;
+                        applySummaryState(availableCell, row.available);
+                    }
+                });
+            }
+
+            if (Array.isArray(month.groups)) {
+                month.groups.forEach(function (group) {
+                    var budgetedCell = document.querySelector('[data-group-field="budgeted"][data-month-key="' + month.monthKey + '"][data-group-id="' + group.groupId + '"]');
+                    var outflowsCell = document.querySelector('[data-group-field="outflows"][data-month-key="' + month.monthKey + '"][data-group-id="' + group.groupId + '"]');
+                    var balanceCell = document.querySelector('[data-group-field="balance"][data-month-key="' + month.monthKey + '"][data-group-id="' + group.groupId + '"]');
+
+                    if (budgetedCell) {
+                        budgetedCell.textContent = group.budgetedFormatted;
+                    }
+
+                    if (outflowsCell) {
+                        outflowsCell.textContent = group.outflowsFormatted;
+                        applySummaryState(outflowsCell, group.outflows);
+                    }
+
+                    if (balanceCell) {
+                        balanceCell.textContent = group.balanceFormatted;
+                        applySummaryState(balanceCell, group.balance);
+                    }
+                });
+            }
+        });
     }
 
     async function performAutosave() {
@@ -329,15 +378,16 @@
                 }
             });
 
-            if (!response.ok) {
-                throw new Error('Save failed.');
-            }
-
             var result = await response.json();
+            if (!response.ok) {
+                throw new Error(result.message || 'Save failed.');
+            }
+            updateBudgetSummaries(result.months);
             setAutosaveStatus('Saved at ' + result.savedAt, 'saved');
         } catch (error) {
-            setAutosaveStatus('Autosave failed. Refresh and try again.', 'error');
+            setAutosaveStatus(error.message || 'Autosave failed. Refresh and try again.', 'error');
         } finally {
+            committedBudgetInput = null;
             autosaveInFlight = false;
             if (autosaveQueued) {
                 performAutosave();
@@ -380,6 +430,14 @@
 
         budgetForm.addEventListener('focusout', function (event) {
             if (event.target.matches('input[type="text"], input[type="number"], select')) {
+                requestAutosave(true);
+            }
+        });
+
+        budgetForm.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' && event.target.matches('[data-budget-input]')) {
+                event.preventDefault();
+                committedBudgetInput = event.target;
                 requestAutosave(true);
             }
         });

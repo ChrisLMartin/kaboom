@@ -53,4 +53,42 @@ public sealed class IndexModel : PageModel
         TempData["StatusMessage"] = "Transaction added.";
         return RedirectToPage();
     }
+
+    public async Task<IActionResult> OnPostUpdateAsync(string transactionId, DateTime date, string accountId, string? categoryId, string payee, string notes, decimal amount)
+    {
+        var data = await _repository.GetAsync();
+        var transaction = data.Transactions.FirstOrDefault(item => item.Id == transactionId);
+        var nextAccount = data.Accounts.FirstOrDefault(item => item.Id == accountId);
+
+        if (transaction is null)
+        {
+            TempData["StatusMessage"] = "Transaction not found.";
+            return RedirectToPage();
+        }
+
+        if (nextAccount is null || string.IsNullOrWhiteSpace(payee))
+        {
+            TempData["StatusMessage"] = "Choose an account and payee.";
+            return RedirectToPage();
+        }
+
+        var previousAccount = data.Accounts.FirstOrDefault(item => item.Id == transaction.AccountId);
+        if (previousAccount is not null)
+        {
+            previousAccount.Balance -= transaction.Amount;
+        }
+
+        nextAccount.Balance += amount;
+
+        transaction.Date = date == default ? DateTime.Today : date;
+        transaction.AccountId = accountId;
+        transaction.CategoryId = string.IsNullOrWhiteSpace(categoryId) ? null : categoryId;
+        transaction.Payee = payee.Trim();
+        transaction.Notes = notes?.Trim() ?? string.Empty;
+        transaction.Amount = amount;
+
+        await _repository.SaveAsync(data);
+        TempData["StatusMessage"] = "Transaction updated.";
+        return RedirectToPage();
+    }
 }

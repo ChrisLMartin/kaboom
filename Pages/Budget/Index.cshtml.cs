@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Spendwise.Models;
 using Spendwise.Services;
+using System.Globalization;
 
 namespace Spendwise.Pages.Budget;
 
@@ -17,7 +18,7 @@ public sealed class IndexModel : PageModel
     }
 
     [BindProperty]
-    public Dictionary<string, decimal> BudgetedAmounts { get; set; } = [];
+    public Dictionary<string, string> BudgetedAmounts { get; set; } = [];
 
     [BindProperty]
     public Dictionary<string, string> CategoryNames { get; set; } = [];
@@ -41,38 +42,94 @@ public sealed class IndexModel : PageModel
         var data = await _repository.GetAsync();
         ApplyCategoryEdits(data);
 
+        var invalidKeys = new List<string>();
+
         foreach (var monthAssignments in BudgetedAmounts
                      .Where(entry => entry.Key.Contains('|'))
                      .GroupBy(entry => entry.Key.Split('|', 2)[0]))
         {
-            var assignments = monthAssignments.ToDictionary(
-                entry => entry.Key.Split('|', 2)[1],
-                entry => entry.Value);
+            var assignments = new Dictionary<string, decimal>();
+            foreach (var entry in monthAssignments)
+            {
+                var categoryId = entry.Key.Split('|', 2)[1];
+                if (!TryParseBudgetAmount(entry.Value, out var parsedAmount))
+                {
+                    invalidKeys.Add(entry.Key);
+                    continue;
+                }
+
+                assignments[categoryId] = parsedAmount;
+            }
+
+            if (invalidKeys.Count > 0)
+            {
+                continue;
+            }
 
             _calculator.SetAssignedAmounts(data, monthAssignments.Key, assignments);
+        }
+
+        if (invalidKeys.Count > 0)
+        {
+            if (IsAjaxRequest())
+            {
+                Response.StatusCode = StatusCodes.Status400BadRequest;
+                return new JsonResult(new
+                {
+                    status = "invalid",
+                    message = "Finish the budget math before saving."
+                });
+            }
+
+            TempData["StatusMessage"] = "Finish the budget math before saving.";
+            return RedirectToPage(new { month = startMonth });
         }
 
         await _repository.SaveAsync(data);
 
         if (IsAjaxRequest())
         {
+            var months = BuildVisibleMonths(data, startMonth);
             return new JsonResult(new
             {
                 status = "saved",
-                savedAt = DateTime.Now.ToString("HH:mm:ss")
+                savedAt = DateTime.Now.ToString("HH:mm:ss"),
+                months = months.Select(month => new
+                {
+                    monthKey = month.MonthKey,
+                    readyToAssign = month.ReadyToAssign,
+                    readyToAssignFormatted = month.ReadyToAssign.ToString("C"),
+                    budgeted = month.CategoryRows.Sum(row => row.Assigned),
+                    budgetedFormatted = month.CategoryRows.Sum(row => row.Assigned).ToString("C"),
+                    outflows = Math.Abs(month.CategoryRows.Where(row => row.Activity < 0).Sum(row => row.Activity)),
+                    outflowsFormatted = Math.Abs(month.CategoryRows.Where(row => row.Activity < 0).Sum(row => row.Activity)).ToString("C"),
+                    available = month.CategoryRows.Sum(row => row.Available),
+                    availableFormatted = month.CategoryRows.Sum(row => row.Available).ToString("C"),
+                    rows = month.CategoryRows.Select(row => new
+                    {
+                        categoryId = row.CategoryId,
+                        assigned = row.Assigned,
+                        assignedInput = row.Assigned.ToString("0.##", CultureInfo.InvariantCulture),
+                        available = row.Available,
+                        availableFormatted = row.Available.ToString("C")
+                    }).ToList(),
+                    groups = month.CategoryRows
+                        .GroupBy(row => row.GroupId)
+                        .Select(group => new
+                        {
+                            groupId = group.Key,
+                            budgeted = group.Sum(row => row.Assigned),
+                            budgetedFormatted = group.Sum(row => row.Assigned).ToString("C"),
+                            outflows = group.Sum(row => row.Activity),
+                            outflowsFormatted = group.Sum(row => row.Activity).ToString("C"),
+                            balance = group.Sum(row => row.Available),
+                            balanceFormatted = group.Sum(row => row.Available).ToString("C")
+                        }).ToList()
+                }).ToList()
             });
         }
 
         TempData["StatusMessage"] = "Budget and categories updated.";
-        return RedirectToPage(new { month = startMonth });
-    }
-
-    public async Task<IActionResult> OnPostMoveAsync(string startMonth, string monthToMove, string fromCategoryId, string toCategoryId, decimal amount)
-    {
-        var data = await _repository.GetAsync();
-        _calculator.MoveMoney(data, monthToMove, fromCategoryId, toCategoryId, amount);
-        await _repository.SaveAsync(data);
-        TempData["StatusMessage"] = "Moved money between categories.";
         return RedirectToPage(new { month = startMonth });
     }
 
@@ -136,11 +193,7 @@ public sealed class IndexModel : PageModel
     private void LoadPage(BudgetData data, string startMonthKey)
     {
         StartMonthKey = startMonthKey;
-
-        var startMonth = BudgetCalculator.ParseMonthKey(startMonthKey);
-        VisibleMonths = Enumerable.Range(0, 3)
-            .Select(offset => _calculator.BuildMonth(data, BudgetCalculator.ToMonthKey(startMonth.AddMonths(offset))))
-            .ToList();
+        VisibleMonths = BuildVisibleMonths(data, startMonthKey);
 
         CategoryGroups = data.CategoryGroups
             .OrderBy(group => group.Name)
@@ -161,8 +214,78 @@ public sealed class IndexModel : PageModel
             .ToList();
     }
 
+    private IReadOnlyList<BudgetMonthViewModel> BuildVisibleMonths(BudgetData data, string startMonthKey)
+    {
+        var startMonth = BudgetCalculator.ParseMonthKey(startMonthKey);
+        return Enumerable.Range(0, 3)
+            .Select(offset => _calculator.BuildMonth(data, BudgetCalculator.ToMonthKey(startMonth.AddMonths(offset))))
+            .ToList();
+    }
+
     private bool IsAjaxRequest()
     {
         return string.Equals(Request.Headers["X-Requested-With"], "XMLHttpRequest", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool TryParseBudgetAmount(string? rawValue, out decimal amount)
+    {
+        amount = 0m;
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return true;
+        }
+
+        var expression = rawValue.Replace(",", string.Empty, StringComparison.Ordinal)
+            .Replace(" ", string.Empty, StringComparison.Ordinal);
+
+        if (expression.Length == 0)
+        {
+            return true;
+        }
+
+        var index = 0;
+        var sign = 1m;
+
+        if (expression[index] is '+' or '-')
+        {
+            sign = expression[index] == '-' ? -1m : 1m;
+            index++;
+        }
+
+        while (index < expression.Length)
+        {
+            var start = index;
+            while (index < expression.Length && expression[index] is not ('+' or '-'))
+            {
+                index++;
+            }
+
+            if (start == index)
+            {
+                return false;
+            }
+
+            var token = expression[start..index];
+            if (!decimal.TryParse(token, NumberStyles.Number, CultureInfo.InvariantCulture, out var parsed))
+            {
+                return false;
+            }
+
+            amount += sign * parsed;
+
+            if (index >= expression.Length)
+            {
+                break;
+            }
+
+            sign = expression[index] == '-' ? -1m : 1m;
+            index++;
+            if (index >= expression.Length)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

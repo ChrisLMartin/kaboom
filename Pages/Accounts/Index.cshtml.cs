@@ -16,18 +16,17 @@ public sealed class IndexModel : PageModel
 
     public IReadOnlyList<Account> Accounts { get; private set; } = [];
 
-    public async Task OnGetAsync()
+    public IActionResult OnGetAsync()
     {
-        var data = await _repository.GetAsync();
-        Accounts = data.Accounts.OrderBy(account => account.Name).ToList();
+        return RedirectToPage("/Budget/Index");
     }
 
-    public async Task<IActionResult> OnPostAddAsync(string name, AccountKind kind, decimal balance)
+    public async Task<IActionResult> OnPostAddAsync(string name, AccountKind kind, decimal balance, string? returnUrl)
     {
         if (string.IsNullOrWhiteSpace(name))
         {
             TempData["StatusMessage"] = "Account name is required.";
-            return RedirectToPage();
+            return RedirectToReturnUrl(returnUrl);
         }
 
         var data = await _repository.GetAsync();
@@ -40,22 +39,32 @@ public sealed class IndexModel : PageModel
 
         await _repository.SaveAsync(data);
         TempData["StatusMessage"] = "Account added.";
-        return RedirectToPage();
+        return RedirectToReturnUrl(returnUrl);
     }
 
-    public async Task<IActionResult> OnPostUpdateBalanceAsync(string accountId, decimal balance)
+    public async Task<IActionResult> OnPostUpdateBalanceAsync(string accountId, decimal balance, string? returnUrl)
     {
         var data = await _repository.GetAsync();
         var account = data.Accounts.FirstOrDefault(item => item.Id == accountId);
         if (account is null)
         {
             TempData["StatusMessage"] = "Account not found.";
-            return RedirectToPage();
+            return RedirectToReturnUrl(returnUrl);
         }
 
         account.Balance = balance;
         await _repository.SaveAsync(data);
         TempData["StatusMessage"] = $"Updated {account.Name}.";
-        return RedirectToPage();
+        return RedirectToReturnUrl(returnUrl);
+    }
+
+    private IActionResult RedirectToReturnUrl(string? returnUrl)
+    {
+        if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+        {
+            return LocalRedirect(returnUrl);
+        }
+
+        return RedirectToPage("/Budget/Index");
     }
 }
