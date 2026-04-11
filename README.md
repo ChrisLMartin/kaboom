@@ -135,6 +135,37 @@ The cleanest managed setup for this repo is:
 - Azure App Service for the ASP.NET host
 - Azure Database for PostgreSQL Flexible Server for the database
 
+Infrastructure as code is included in [infra/main.bicep](c:\repos\kaboom\infra\main.bicep), with a sample parameters file at [main.parameters.example.bicepparam](c:\repos\kaboom\infra\main.parameters.example.bicepparam) and deployment notes in [infra/README.md](c:\repos\kaboom\infra\README.md).
+
+### Deploy The Azure Infrastructure
+
+1. Install Azure CLI and sign in.
+2. Create or choose an Azure resource group.
+3. Copy `infra/main.parameters.example.bicepparam` to your own parameters file and fill in:
+   - a globally unique `webAppName`
+   - a globally unique `postgresServerName`
+   - a strong `postgresAdminPassword`
+   - your GitHub owner/repo for OIDC
+   - optionally your Google OAuth client ID and secret
+4. Deploy the Bicep:
+
+```powershell
+az group create --name rg-kaboom-prod --location australiaeast
+az deployment group create `
+  --resource-group rg-kaboom-prod `
+  --template-file infra/main.bicep `
+  --parameters infra/main.parameters.prod.bicepparam
+```
+
+The Bicep deployment creates:
+
+- Azure App Service plan
+- Linux Web App
+- Application Insights + Log Analytics
+- PostgreSQL Flexible Server + `kaboom` database
+- PostgreSQL firewall rules
+- a GitHub deployment identity with federated credentials for `main`
+
 Required app settings in Azure App Service:
 
 ```text
@@ -145,12 +176,30 @@ Application__PublicOrigin=https://your-domain.example.com
 ASPNETCORE_ENVIRONMENT=Production
 ```
 
-The included GitHub Actions workflow at `.github/workflows/azure-appservice.yml` expects these repository secrets:
+### Deploy From GitHub Into Azure
+
+The GitHub Actions workflow now uses Azure OIDC via `azure/login`, which GitHub and Microsoft both recommend over long-lived credentials.
+
+After the Bicep deployment, take these outputs and add them to GitHub Actions secrets or, preferably for a public repo, a protected GitHub Environment:
 
 ```text
+AZURE_CLIENT_ID
+AZURE_TENANT_ID
+AZURE_SUBSCRIPTION_ID
 AZURE_WEBAPP_NAME
-AZURE_WEBAPP_PUBLISH_PROFILE
 ```
+
+How to map them:
+
+- `AZURE_CLIENT_ID` = `githubDeploymentClientId` output from the Bicep deployment
+- `AZURE_TENANT_ID` = `azureTenantId` output
+- `AZURE_SUBSCRIPTION_ID` = `azureSubscriptionId` output
+- `AZURE_WEBAPP_NAME` = `webAppName` output
+
+Then:
+
+1. Push to `main`, or run the workflow manually.
+2. GitHub Actions builds the React app, publishes the ASP.NET app, signs into Azure with OIDC, and deploys to App Service.
 
 That workflow:
 
@@ -158,6 +207,22 @@ That workflow:
 - builds `ClientApp`
 - publishes the ASP.NET app
 - deploys the publish output to Azure App Service
+
+### Google OAuth For Azure
+
+Once the Azure web app exists, add this redirect URI in Google Cloud:
+
+```text
+https://<your-web-app-host>/signin-google
+```
+
+For example:
+
+```text
+https://kaboom-prod-example.azurewebsites.net/signin-google
+```
+
+If you later attach a custom domain, also add the custom-domain redirect URI and update `Application__PublicOrigin`.
 
 ## API Surface
 
