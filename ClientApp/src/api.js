@@ -1,5 +1,6 @@
 async function apiRequest(path, options = {}) {
   const response = await fetch(path, {
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(options.headers ?? {})
@@ -9,6 +10,8 @@ async function apiRequest(path, options = {}) {
 
   if (!response.ok) {
     let message = "Request failed.";
+    const error = new Error(message);
+    error.status = response.status;
 
     try {
       const payload = await response.json();
@@ -24,7 +27,8 @@ async function apiRequest(path, options = {}) {
       message = response.statusText || message;
     }
 
-    throw new Error(message);
+    error.message = message;
+    throw error;
   }
 
   if (response.status === 204) {
@@ -35,6 +39,26 @@ async function apiRequest(path, options = {}) {
 }
 
 export const api = {
+  getAuthStatus() {
+    return apiRequest("/api/auth/me");
+  },
+  register(payload) {
+    return apiRequest("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  login(payload) {
+    return apiRequest("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  },
+  logout() {
+    return apiRequest("/api/auth/logout", {
+      method: "POST"
+    });
+  },
   getBudget(month, months = 3) {
     const query = new URLSearchParams({ month, months: String(months) });
     return apiRequest(`/api/budget?${query.toString()}`);
@@ -122,4 +146,12 @@ export function addMonths(monthKey, amount) {
   const [year, month] = monthKey.split("-").map(Number);
   const date = new Date(year, month - 1 + amount, 1);
   return formatMonthInput(date);
+}
+
+export function startGoogleLogin(returnTo = "/budget") {
+  const target = window.location.port === "5173"
+    ? `${window.location.origin}${returnTo}`
+    : returnTo;
+  const query = new URLSearchParams({ returnUrl: target });
+  window.location.assign(`/api/auth/google/login?${query.toString()}`);
 }

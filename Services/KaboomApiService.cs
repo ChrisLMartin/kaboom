@@ -8,22 +8,29 @@ public sealed class KaboomApiService
 {
     private readonly IBudgetRepository _repository;
     private readonly BudgetCalculator _calculator;
+    private readonly CurrentBudgetService _currentBudgetService;
 
-    public KaboomApiService(IBudgetRepository repository, BudgetCalculator calculator)
+    public KaboomApiService(
+        IBudgetRepository repository,
+        BudgetCalculator calculator,
+        CurrentBudgetService currentBudgetService)
     {
         _repository = repository;
         _calculator = calculator;
+        _currentBudgetService = currentBudgetService;
     }
 
     public async Task<IReadOnlyList<AccountDto>> GetAccountsAsync(CancellationToken cancellationToken = default)
     {
-        var data = await _repository.GetAsync(cancellationToken);
+        var access = await _currentBudgetService.GetRequiredAsync(cancellationToken);
+        var data = await _repository.GetAsync(access.BudgetId, cancellationToken);
         return BuildAccounts(data);
     }
 
     public async Task<AccountDto> AddAccountAsync(AccountUpsertRequest request, CancellationToken cancellationToken = default)
     {
-        var data = await _repository.GetAsync(cancellationToken);
+        var access = await _currentBudgetService.GetRequiredAsync(cancellationToken);
+        var data = await _repository.GetAsync(access.BudgetId, cancellationToken);
         var account = new Account
         {
             Name = RequireValue(request.Name, "Account name is required."),
@@ -32,13 +39,14 @@ public sealed class KaboomApiService
         };
 
         data.Accounts.Add(account);
-        await _repository.SaveAsync(data, cancellationToken);
+        await _repository.SaveAsync(access.BudgetId, data, cancellationToken);
         return BuildAccount(account);
     }
 
     public async Task<AccountDto> UpdateAccountAsync(string accountId, AccountUpsertRequest request, CancellationToken cancellationToken = default)
     {
-        var data = await _repository.GetAsync(cancellationToken);
+        var access = await _currentBudgetService.GetRequiredAsync(cancellationToken);
+        var data = await _repository.GetAsync(access.BudgetId, cancellationToken);
         var account = data.Accounts.FirstOrDefault(item => item.Id == accountId)
             ?? throw new KeyNotFoundException("Account not found.");
 
@@ -46,56 +54,61 @@ public sealed class KaboomApiService
         account.Kind = ParseAccountKind(request.Kind);
         account.Balance = request.Balance;
 
-        await _repository.SaveAsync(data, cancellationToken);
+        await _repository.SaveAsync(access.BudgetId, data, cancellationToken);
         return BuildAccount(account);
     }
 
     public async Task<IReadOnlyList<AccountDto>> DeleteAccountAsync(string accountId, CancellationToken cancellationToken = default)
     {
-        var data = await _repository.GetAsync(cancellationToken);
+        var access = await _currentBudgetService.GetRequiredAsync(cancellationToken);
+        var data = await _repository.GetAsync(access.BudgetId, cancellationToken);
         var account = data.Accounts.FirstOrDefault(item => item.Id == accountId)
             ?? throw new KeyNotFoundException("Account not found.");
 
         data.Transactions.RemoveAll(item => item.AccountId == accountId);
         data.Accounts.Remove(account);
 
-        await _repository.SaveAsync(data, cancellationToken);
+        await _repository.SaveAsync(access.BudgetId, data, cancellationToken);
         return BuildAccounts(data);
     }
 
     public async Task<IReadOnlyList<CategoryGroupDto>> GetCategoryGroupsAsync(CancellationToken cancellationToken = default)
     {
-        var data = await _repository.GetAsync(cancellationToken);
+        var access = await _currentBudgetService.GetRequiredAsync(cancellationToken);
+        var data = await _repository.GetAsync(access.BudgetId, cancellationToken);
         return BuildCategoryGroups(data);
     }
 
     public async Task<CategoryGroupDto> RenameCategoryGroupAsync(string groupId, RenameEntityRequest request, CancellationToken cancellationToken = default)
     {
-        var data = await _repository.GetAsync(cancellationToken);
+        var access = await _currentBudgetService.GetRequiredAsync(cancellationToken);
+        var data = await _repository.GetAsync(access.BudgetId, cancellationToken);
         var group = data.CategoryGroups.FirstOrDefault(item => item.Id == groupId)
             ?? throw new KeyNotFoundException("Category group not found.");
 
         group.Name = RequireValue(request.Name, "Group name is required.");
-        await _repository.SaveAsync(data, cancellationToken);
+        await _repository.SaveAsync(access.BudgetId, data, cancellationToken);
         return BuildCategoryGroup(group);
     }
 
     public async Task<CategoryDto> RenameCategoryAsync(string categoryId, RenameEntityRequest request, CancellationToken cancellationToken = default)
     {
-        var data = await _repository.GetAsync(cancellationToken);
+        var access = await _currentBudgetService.GetRequiredAsync(cancellationToken);
+        var data = await _repository.GetAsync(access.BudgetId, cancellationToken);
         var category = data.CategoryGroups
             .SelectMany(group => group.Categories)
             .FirstOrDefault(item => item.Id == categoryId)
             ?? throw new KeyNotFoundException("Category not found.");
 
         category.Name = RequireValue(request.Name, "Category name is required.");
-        await _repository.SaveAsync(data, cancellationToken);
+        await _repository.SaveAsync(access.BudgetId, data, cancellationToken);
         return BuildCategory(category);
     }
 
     public async Task<CategoryDto> AddCategoryAsync(AddCategoryRequest request, CancellationToken cancellationToken = default)
     {
-        var data = await _repository.GetAsync(cancellationToken);
+        var access = await _currentBudgetService.GetRequiredAsync(cancellationToken);
+        var data = await _repository.GetAsync(access.BudgetId, cancellationToken);
         var categoryName = RequireValue(request.Name, "Category name is required.");
 
         CategoryGroup? group = null;
@@ -124,19 +137,21 @@ public sealed class KaboomApiService
         };
 
         group.Categories.Add(category);
-        await _repository.SaveAsync(data, cancellationToken);
+        await _repository.SaveAsync(access.BudgetId, data, cancellationToken);
         return BuildCategory(category);
     }
 
     public async Task<BudgetPageDto> GetBudgetPageAsync(string? startMonthKey, int monthCount = 3, CancellationToken cancellationToken = default)
     {
-        var data = await _repository.GetAsync(cancellationToken);
+        var access = await _currentBudgetService.GetRequiredAsync(cancellationToken);
+        var data = await _repository.GetAsync(access.BudgetId, cancellationToken);
         return BuildBudgetPage(data, NormalizeMonthKey(startMonthKey), monthCount);
     }
 
     public async Task<BudgetPageDto> SaveBudgetAsync(SaveBudgetRequest request, CancellationToken cancellationToken = default)
     {
-        var data = await _repository.GetAsync(cancellationToken);
+        var access = await _currentBudgetService.GetRequiredAsync(cancellationToken);
+        var data = await _repository.GetAsync(access.BudgetId, cancellationToken);
         var invalidUpdates = new List<string>();
 
         foreach (var monthUpdates in request.Updates
@@ -170,19 +185,21 @@ public sealed class KaboomApiService
             throw new ArgumentException("Finish the budget math before saving.");
         }
 
-        await _repository.SaveAsync(data, cancellationToken);
+        await _repository.SaveAsync(access.BudgetId, data, cancellationToken);
         return BuildBudgetPage(data, NormalizeMonthKey(request.StartMonthKey), request.MonthCount);
     }
 
     public async Task<TransactionsPageDto> GetTransactionsPageAsync(CancellationToken cancellationToken = default)
     {
-        var data = await _repository.GetAsync(cancellationToken);
+        var access = await _currentBudgetService.GetRequiredAsync(cancellationToken);
+        var data = await _repository.GetAsync(access.BudgetId, cancellationToken);
         return BuildTransactionsPage(data);
     }
 
     public async Task<TransactionsPageDto> AddTransactionAsync(TransactionUpsertRequest request, CancellationToken cancellationToken = default)
     {
-        var data = await _repository.GetAsync(cancellationToken);
+        var access = await _currentBudgetService.GetRequiredAsync(cancellationToken);
+        var data = await _repository.GetAsync(access.BudgetId, cancellationToken);
         var account = data.Accounts.FirstOrDefault(item => item.Id == request.AccountId)
             ?? throw new ArgumentException("Choose an account.");
         var payee = RequireValue(request.Payee, "Payee is required.");
@@ -198,13 +215,14 @@ public sealed class KaboomApiService
         });
 
         account.Balance += request.Amount;
-        await _repository.SaveAsync(data, cancellationToken);
+        await _repository.SaveAsync(access.BudgetId, data, cancellationToken);
         return BuildTransactionsPage(data);
     }
 
     public async Task<TransactionsPageDto> UpdateTransactionAsync(string transactionId, TransactionUpsertRequest request, CancellationToken cancellationToken = default)
     {
-        var data = await _repository.GetAsync(cancellationToken);
+        var access = await _currentBudgetService.GetRequiredAsync(cancellationToken);
+        var data = await _repository.GetAsync(access.BudgetId, cancellationToken);
         var transaction = data.Transactions.FirstOrDefault(item => item.Id == transactionId)
             ?? throw new KeyNotFoundException("Transaction not found.");
         var nextAccount = data.Accounts.FirstOrDefault(item => item.Id == request.AccountId)
@@ -225,13 +243,14 @@ public sealed class KaboomApiService
         transaction.Notes = request.Notes?.Trim() ?? string.Empty;
         transaction.Amount = request.Amount;
 
-        await _repository.SaveAsync(data, cancellationToken);
+        await _repository.SaveAsync(access.BudgetId, data, cancellationToken);
         return BuildTransactionsPage(data);
     }
 
     public async Task<ReportsPageDto> GetReportsAsync(string? monthKey, CancellationToken cancellationToken = default)
     {
-        var data = await _repository.GetAsync(cancellationToken);
+        var access = await _currentBudgetService.GetRequiredAsync(cancellationToken);
+        var data = await _repository.GetAsync(access.BudgetId, cancellationToken);
         var normalizedMonthKey = NormalizeMonthKey(monthKey);
         var report = _calculator.BuildReport(data, normalizedMonthKey);
 

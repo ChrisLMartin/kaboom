@@ -6,50 +6,55 @@ namespace Kaboom.Services;
 
 public sealed class PostgresBudgetRepository : IBudgetRepository
 {
-    private readonly IDbContextFactory<KaboomDbContext> _dbContextFactory;
+    private readonly KaboomDbContext _dbContext;
 
-    public PostgresBudgetRepository(IDbContextFactory<KaboomDbContext> dbContextFactory)
+    public PostgresBudgetRepository(KaboomDbContext dbContext)
     {
-        _dbContextFactory = dbContextFactory;
+        _dbContext = dbContext;
     }
 
-    public async Task<BudgetData> GetAsync(CancellationToken cancellationToken = default)
+    public async Task<BudgetData> GetAsync(string budgetId, CancellationToken cancellationToken = default)
     {
-        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-
-        var createdUtc = await dbContext.BudgetStates
+        var createdUtc = await _dbContext.BudgetStates
+            .Where(item => item.BudgetId == budgetId)
             .Select(item => item.CreatedUtc)
             .SingleOrDefaultAsync(cancellationToken);
 
-        var accounts = await dbContext.Accounts
+        var accounts = await _dbContext.Accounts
             .AsNoTracking()
+            .Where(item => item.BudgetId == budgetId)
             .OrderBy(item => item.Name)
             .ToListAsync(cancellationToken);
 
-        var groups = await dbContext.CategoryGroups
+        var groups = await _dbContext.CategoryGroups
             .AsNoTracking()
+            .Where(item => item.BudgetId == budgetId)
             .OrderBy(item => item.Name)
             .ToListAsync(cancellationToken);
 
-        var categories = await dbContext.Categories
+        var categories = await _dbContext.Categories
             .AsNoTracking()
+            .Where(item => item.BudgetId == budgetId)
             .OrderBy(item => item.GroupId)
             .ThenBy(item => item.Name)
             .ToListAsync(cancellationToken);
 
-        var transactions = await dbContext.Transactions
+        var transactions = await _dbContext.Transactions
             .AsNoTracking()
+            .Where(item => item.BudgetId == budgetId)
             .OrderBy(item => item.Date)
             .ThenBy(item => item.Id)
             .ToListAsync(cancellationToken);
 
-        var monthlyBudgets = await dbContext.MonthlyBudgets
+        var monthlyBudgets = await _dbContext.MonthlyBudgets
             .AsNoTracking()
+            .Where(item => item.BudgetId == budgetId)
             .OrderBy(item => item.MonthKey)
             .ToListAsync(cancellationToken);
 
-        var allocations = await dbContext.CategoryAllocations
+        var allocations = await _dbContext.CategoryAllocations
             .AsNoTracking()
+            .Where(item => item.BudgetId == budgetId)
             .OrderBy(item => item.MonthKey)
             .ThenBy(item => item.CategoryId)
             .ToListAsync(cancellationToken);
@@ -111,51 +116,68 @@ public sealed class PostgresBudgetRepository : IBudgetRepository
         };
     }
 
-    public async Task SaveAsync(BudgetData data, CancellationToken cancellationToken = default)
+    public async Task SaveAsync(string budgetId, BudgetData data, CancellationToken cancellationToken = default)
     {
-        await using var dbContext = await _dbContextFactory.CreateDbContextAsync(cancellationToken);
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        await using var transaction = await _dbContext.Database.BeginTransactionAsync(cancellationToken);
 
-        await dbContext.CategoryAllocations.ExecuteDeleteAsync(cancellationToken);
-        await dbContext.MonthlyBudgets.ExecuteDeleteAsync(cancellationToken);
-        await dbContext.Transactions.ExecuteDeleteAsync(cancellationToken);
-        await dbContext.Categories.ExecuteDeleteAsync(cancellationToken);
-        await dbContext.CategoryGroups.ExecuteDeleteAsync(cancellationToken);
-        await dbContext.Accounts.ExecuteDeleteAsync(cancellationToken);
-        await dbContext.BudgetStates.ExecuteDeleteAsync(cancellationToken);
+        await _dbContext.CategoryAllocations
+            .Where(item => item.BudgetId == budgetId)
+            .ExecuteDeleteAsync(cancellationToken);
+        await _dbContext.MonthlyBudgets
+            .Where(item => item.BudgetId == budgetId)
+            .ExecuteDeleteAsync(cancellationToken);
+        await _dbContext.Transactions
+            .Where(item => item.BudgetId == budgetId)
+            .ExecuteDeleteAsync(cancellationToken);
+        await _dbContext.Categories
+            .Where(item => item.BudgetId == budgetId)
+            .ExecuteDeleteAsync(cancellationToken);
+        await _dbContext.CategoryGroups
+            .Where(item => item.BudgetId == budgetId)
+            .ExecuteDeleteAsync(cancellationToken);
+        await _dbContext.Accounts
+            .Where(item => item.BudgetId == budgetId)
+            .ExecuteDeleteAsync(cancellationToken);
+        await _dbContext.BudgetStates
+            .Where(item => item.BudgetId == budgetId)
+            .ExecuteDeleteAsync(cancellationToken);
 
-        dbContext.BudgetStates.Add(new BudgetStateEntity
+        _dbContext.BudgetStates.Add(new BudgetStateEntity
         {
-            Id = 1,
+            BudgetId = budgetId,
             CreatedUtc = EnsureUtc(data.CreatedUtc)
         });
 
-        dbContext.Accounts.AddRange(data.Accounts.Select(item => new AccountEntity
+        _dbContext.Accounts.AddRange(data.Accounts.Select(item => new AccountEntity
         {
             Id = item.Id,
+            BudgetId = budgetId,
             Name = item.Name,
             Kind = item.Kind,
             Balance = item.Balance
         }));
 
-        dbContext.CategoryGroups.AddRange(data.CategoryGroups.Select(group => new CategoryGroupEntity
+        _dbContext.CategoryGroups.AddRange(data.CategoryGroups.Select(group => new CategoryGroupEntity
         {
             Id = group.Id,
+            BudgetId = budgetId,
             Name = group.Name
         }));
 
-        dbContext.Categories.AddRange(data.CategoryGroups
+        _dbContext.Categories.AddRange(data.CategoryGroups
             .SelectMany(group => group.Categories.Select(category => new CategoryEntity
             {
                 Id = category.Id,
+                BudgetId = budgetId,
                 GroupId = group.Id,
                 Name = category.Name,
                 MonthlyTarget = category.MonthlyTarget
             })));
 
-        dbContext.Transactions.AddRange(data.Transactions.Select(item => new TransactionEntity
+        _dbContext.Transactions.AddRange(data.Transactions.Select(item => new TransactionEntity
         {
             Id = item.Id,
+            BudgetId = budgetId,
             Date = item.Date.Date,
             AccountId = item.AccountId,
             CategoryId = item.CategoryId,
@@ -164,20 +186,22 @@ public sealed class PostgresBudgetRepository : IBudgetRepository
             Amount = item.Amount
         }));
 
-        dbContext.MonthlyBudgets.AddRange(data.MonthlyBudgets.Select(item => new MonthlyBudgetEntity
+        _dbContext.MonthlyBudgets.AddRange(data.MonthlyBudgets.Select(item => new MonthlyBudgetEntity
         {
+            BudgetId = budgetId,
             MonthKey = item.MonthKey
         }));
 
-        dbContext.CategoryAllocations.AddRange(data.MonthlyBudgets
+        _dbContext.CategoryAllocations.AddRange(data.MonthlyBudgets
             .SelectMany(month => month.Allocations.Select(allocation => new CategoryAllocationEntity
             {
+                BudgetId = budgetId,
                 MonthKey = month.MonthKey,
                 CategoryId = allocation.CategoryId,
                 AssignedAmount = allocation.AssignedAmount
             })));
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
     }
 

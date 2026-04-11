@@ -4,6 +4,6 @@ namespace Kaboom.Services;
 
 public interface IBudgetRepository
 {
-    Task<BudgetData> GetAsync(CancellationToken cancellationToken = default);
-    Task SaveAsync(BudgetData data, CancellationToken cancellationToken = default);
+    Task<BudgetData> GetAsync(string budgetId, CancellationToken cancellationToken = default);
+    Task SaveAsync(string budgetId, BudgetData data, CancellationToken cancellationToken = default);
 }

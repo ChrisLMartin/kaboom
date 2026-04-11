@@ -1,5 +1,26 @@
 namespace Kaboom.Api;
 
+public sealed record AuthUserDto(
+    string Id,
+    string Email,
+    string DisplayName,
+    string BudgetId,
+    string BudgetName);
+
+public sealed record AuthStatusDto(
+    bool IsAuthenticated,
+    AuthUserDto? User,
+    IReadOnlyList<string> ExternalProviders);
+
+public sealed record RegisterRequest(
+    string Email,
+    string Password,
+    string? DisplayName);
+
+public sealed record LoginRequest(
+    string Email,
+    string Password);
+
 public sealed record AccountDto(
     string Id,
     string Name,

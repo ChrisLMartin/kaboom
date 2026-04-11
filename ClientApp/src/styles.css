@@ -872,6 +872,101 @@ label span,
   margin-top: 1rem;
 }
 
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 2rem;
+  background:
+    radial-gradient(circle at top left, rgba(80, 160, 176, 0.18), transparent 30%),
+    linear-gradient(180deg, #f2f8fb 0%, #eef4f7 100%);
+}
+
+.auth-card {
+  width: min(460px, 100%);
+  display: grid;
+  gap: 1rem;
+  padding: 2rem;
+  border: 1px solid rgba(39, 74, 94, 0.08);
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 28px 60px rgba(16, 34, 46, 0.14);
+}
+
+.auth-card h1 {
+  margin: 0;
+}
+
+.auth-card-loading {
+  text-align: center;
+}
+
+.auth-copy,
+.auth-switch,
+.sidebar-user-email {
+  margin: 0;
+  color: #5f7481;
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.auth-form label,
+.sidebar-account-edit-grid label,
+.sidebar-account-edit-grid-new label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.auth-primary-button,
+.auth-secondary-button {
+  width: 100%;
+  justify-content: center;
+}
+
+.auth-primary-button {
+  padding: 0.85rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: #1f7c91;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-primary-button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.auth-secondary-button {
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(31, 124, 145, 0.18);
+  border-radius: 999px;
+  background: #f5fafc;
+  color: #204d5b;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-error {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.85rem;
+  background: rgba(183, 47, 47, 0.1);
+  color: #9d2626;
+}
+
+.sidebar-user-panel {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
 .empty-state {
   padding: 2rem;
   border-radius: 1.4rem;
