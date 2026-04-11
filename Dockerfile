@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY ["Spendwise.csproj", "./"]
+COPY ["Kaboom.csproj", "./"]
 RUN dotnet restore
 
 COPY . .
@@ -14,4 +14,4 @@ COPY --from=build /app/publish .
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
-ENTRYPOINT ["dotnet", "Spendwise.dll"]
+ENTRYPOINT ["dotnet", "Kaboom.dll"]

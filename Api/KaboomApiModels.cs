@@ -1,4 +1,4 @@
-namespace Spendwise.Api;
+namespace Kaboom.Api;
 
 public sealed record AccountDto(
     string Id,

@@ -1,6 +1,6 @@
-using Spendwise.Models;
+using Kaboom.Models;
 
-namespace Spendwise.Services;
+namespace Kaboom.Services;
 
 public static class DemoDataFactory
 {

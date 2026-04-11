@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Spendwise.Models;
-using Spendwise.Services;
+using Kaboom.Models;
+using Kaboom.Services;
 
-namespace Spendwise.Pages.Transactions;
+namespace Kaboom.Pages.Transactions;
 
 public sealed class IndexModel : PageModel
 {

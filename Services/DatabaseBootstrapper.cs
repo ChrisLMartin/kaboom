@@ -1,14 +1,14 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
-using Spendwise.Data;
-using Spendwise.Models;
+using Kaboom.Data;
+using Kaboom.Models;
 
-namespace Spendwise.Services;
+namespace Kaboom.Services;
 
 public sealed class DatabaseBootstrapper
 {
-    private readonly IDbContextFactory<SpendwiseDbContext> _dbContextFactory;
+    private readonly IDbContextFactory<KaboomDbContext> _dbContextFactory;
     private readonly PostgresBudgetRepository _repository;
     private readonly IWebHostEnvironment _environment;
     private readonly JsonSerializerOptions _jsonOptions = new()
@@ -17,7 +17,7 @@ public sealed class DatabaseBootstrapper
     };
 
     public DatabaseBootstrapper(
-        IDbContextFactory<SpendwiseDbContext> dbContextFactory,
+        IDbContextFactory<KaboomDbContext> dbContextFactory,
         PostgresBudgetRepository repository,
         IWebHostEnvironment environment)
     {

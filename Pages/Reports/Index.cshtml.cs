@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Spendwise.Services;
+using Kaboom.Services;
 
-namespace Spendwise.Pages.Reports;
+namespace Kaboom.Pages.Reports;
 
 public sealed class IndexModel : PageModel
 {

@@ -1,14 +1,14 @@
 using Microsoft.EntityFrameworkCore;
-using Spendwise.Data;
-using Spendwise.Models;
+using Kaboom.Data;
+using Kaboom.Models;
 
-namespace Spendwise.Services;
+namespace Kaboom.Services;
 
 public sealed class PostgresBudgetRepository : IBudgetRepository
 {
-    private readonly IDbContextFactory<SpendwiseDbContext> _dbContextFactory;
+    private readonly IDbContextFactory<KaboomDbContext> _dbContextFactory;
 
-    public PostgresBudgetRepository(IDbContextFactory<SpendwiseDbContext> dbContextFactory)
+    public PostgresBudgetRepository(IDbContextFactory<KaboomDbContext> dbContextFactory)
     {
         _dbContextFactory = dbContextFactory;
     }

@@ -1,6 +1,6 @@
-# Spendwise User Guide
+# Kaboom User Guide
 
-Spendwise is a simple zero-based budgeting app for planning the money you already have. You can assign money to categories month by month, record transactions, update account balances, and move money between categories when priorities change.
+Kaboom is a simple zero-based budgeting app for planning the money you already have. You can assign money to categories month by month, record transactions, update account balances, and move money between categories when priorities change.
 
 Screenshots in this guide were captured from the app's built-in demo data.
 

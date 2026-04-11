@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace Spendwise.Pages;
+namespace Kaboom.Pages;
 
 public sealed class ErrorModel : PageModel
 {

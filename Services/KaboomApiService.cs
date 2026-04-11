@@ -1,15 +1,15 @@
 using System.Globalization;
-using Spendwise.Api;
-using Spendwise.Models;
+using Kaboom.Api;
+using Kaboom.Models;
 
-namespace Spendwise.Services;
+namespace Kaboom.Services;
 
-public sealed class SpendwiseApiService
+public sealed class KaboomApiService
 {
     private readonly IBudgetRepository _repository;
     private readonly BudgetCalculator _calculator;
 
-    public SpendwiseApiService(IBudgetRepository repository, BudgetCalculator calculator)
+    public KaboomApiService(IBudgetRepository repository, BudgetCalculator calculator)
     {
         _repository = repository;
         _calculator = calculator;
@@ -48,6 +48,19 @@ public sealed class SpendwiseApiService
 
         await _repository.SaveAsync(data, cancellationToken);
         return BuildAccount(account);
+    }
+
+    public async Task<IReadOnlyList<AccountDto>> DeleteAccountAsync(string accountId, CancellationToken cancellationToken = default)
+    {
+        var data = await _repository.GetAsync(cancellationToken);
+        var account = data.Accounts.FirstOrDefault(item => item.Id == accountId)
+            ?? throw new KeyNotFoundException("Account not found.");
+
+        data.Transactions.RemoveAll(item => item.AccountId == accountId);
+        data.Accounts.Remove(account);
+
+        await _repository.SaveAsync(data, cancellationToken);
+        return BuildAccounts(data);
     }
 
     public async Task<IReadOnlyList<CategoryGroupDto>> GetCategoryGroupsAsync(CancellationToken cancellationToken = default)

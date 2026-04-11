@@ -1,6 +1,6 @@
-# Spendwise
+# Kaboom
 
-Spendwise is a budgeting app with an ASP.NET Core API backend, a React frontend, and PostgreSQL persistence.
+Kaboom is a budgeting app with an ASP.NET Core API backend, a React frontend, and PostgreSQL persistence.
 
 It follows a zero-based budgeting approach:
 
@@ -36,7 +36,7 @@ docker compose up -d postgres
 4. The app expects this default local connection string:
 
 ```text
-Host=localhost;Port=5432;Database=spendwise;Username=postgres;Password=postgres
+Host=localhost;Port=5432;Database=kaboom;Username=postgres;Password=postgres
 ```
 
 That connection string is already configured in `appsettings.json`.
@@ -97,7 +97,7 @@ dotnet run --no-launch-profile --urls http://localhost:5085
 
 Then open `http://localhost:5085`.
 
-On first startup, Spendwise will:
+On first startup, Kaboom will:
 
 - create the PostgreSQL schema automatically
 - import `App_Data/budget-data.json` if the database is empty
@@ -112,7 +112,7 @@ dotnet run
 
 The project launch settings point at `http://localhost:5085` and `https://localhost:7085`.
 
-If port `5432` is already in use on your machine, change the published port in `compose.yaml` and update the `Port=` value in the `Spendwise` connection string to match.
+If port `5432` is already in use on your machine, change the published port in `compose.yaml` and update the `Port=` value in the `Kaboom` connection string to match.
 
 ## API Surface
 
@@ -134,7 +134,7 @@ The included `Dockerfile` builds the ASP.NET host. For local development, the be
 - PostgreSQL in Docker
 - the ASP.NET app running natively with `dotnet run`
 
-That gives you fast rebuilds while keeping the database isolated. If you later want to run the app in a container too, pass a PostgreSQL connection string via environment variable, for example `ConnectionStrings__Spendwise=Host=postgres;Port=5432;Database=spendwise;Username=postgres;Password=postgres`.
+That gives you fast rebuilds while keeping the database isolated. If you later want to run the app in a container too, pass a PostgreSQL connection string via environment variable, for example `ConnectionStrings__Kaboom=Host=postgres;Port=5432;Database=kaboom;Username=postgres;Password=postgres`.
 
 ## Notes
 

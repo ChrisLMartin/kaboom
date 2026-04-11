@@ -1,12 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using Spendwise.Models;
+using Kaboom.Models;
 
-namespace Spendwise.Data;
+namespace Kaboom.Data;
 
-public sealed class SpendwiseDbContext : DbContext
+public sealed class KaboomDbContext : DbContext
 {
-    public SpendwiseDbContext(DbContextOptions<SpendwiseDbContext> options)
+    public KaboomDbContext(DbContextOptions<KaboomDbContext> options)
         : base(options)
     {
     }

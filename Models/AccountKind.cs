@@ -1,4 +1,4 @@
-namespace Spendwise.Models;
+namespace Kaboom.Models;
 
 public enum AccountKind
 {

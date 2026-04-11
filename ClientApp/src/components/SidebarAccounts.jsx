@@ -114,6 +114,41 @@ export default function SidebarAccounts() {
     }
   }
 
+  async function handleDeleteAccount(accountId) {
+    const confirmed = window.confirm(
+      "Delete this account? This will remove all transactions for the account and will disrupt the existing budgets."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await api.deleteAccount(accountId);
+      await loadAccounts();
+    } catch (nextError) {
+      setError(nextError.message);
+    }
+  }
+
+  function handleEditFormBlur(accountId, event) {
+    const nextFocused = event.relatedTarget;
+    if (nextFocused && event.currentTarget.contains(nextFocused)) {
+      return;
+    }
+
+    handleUpdateAccount(accountId);
+  }
+
+  function handleEditFormKeyDown(accountId, event) {
+    if (event.key !== "Enter") {
+      return;
+    }
+
+    event.preventDefault();
+    handleUpdateAccount(accountId);
+  }
+
   const groupedAccounts = [...accounts]
     .sort((left, right) => {
       const kindOrder = orderForKind(left.kind) - orderForKind(right.kind);
@@ -137,51 +172,51 @@ export default function SidebarAccounts() {
           <p className="eyebrow">Accounts</p>
           <strong>All accounts</strong>
         </div>
-        <div className="sidebar-accounts-actions">
-          <button type="button" className="secondary sidebar-edit-toggle" onClick={() => setIsEditMode((current) => !current)}>
-            {isEditMode ? "Done" : "Add / Edit"}
-          </button>
-          <span className={`sidebar-accounts-total ${trackedTotal >= 0 ? "positive" : "negative"}`}>
-            {formatCurrency(trackedTotal)}
-          </span>
-        </div>
+        <span className={`sidebar-accounts-total ${trackedTotal >= 0 ? "positive" : "negative"}`}>
+          {formatCurrency(trackedTotal)}
+        </span>
       </div>
 
       {loading ? <p className="sidebar-empty-state">Loading accounts…</p> : null}
       {error ? <p className="sidebar-error">{error}</p> : null}
 
       {!loading && !isEditMode ? (
-        <div className="sidebar-account-groups">
-          {Object.keys(groupedAccounts).length === 0 ? (
-            <p className="sidebar-empty-state">No accounts yet.</p>
-          ) : (
-            Object.entries(groupedAccounts).map(([kind, entries]) => (
-              <div className="sidebar-account-group" key={kind}>
-                <p className="sidebar-account-kind">{labelForKind(kind)}</p>
-                <div className="sidebar-account-list">
-                  {entries.map((account) => {
-                    const draft = drafts[account.id] ?? {
-                      name: account.name,
-                      kind: account.kind,
-                      balance: formatAmountInput(account.balance)
-                    };
+        <>
+          <div className="sidebar-account-groups">
+            {Object.keys(groupedAccounts).length === 0 ? (
+              <p className="sidebar-empty-state">No accounts yet.</p>
+            ) : (
+              Object.entries(groupedAccounts).map(([kind, entries]) => (
+                <div className="sidebar-account-group" key={kind}>
+                  <p className="sidebar-account-kind">{labelForKind(kind)}</p>
+                  <div className="sidebar-account-list">
+                    {entries.map((account) => {
+                      const draft = drafts[account.id] ?? {
+                        name: account.name,
+                        kind: account.kind,
+                        balance: formatAmountInput(account.balance)
+                      };
 
-                    return (
-                      <div className="sidebar-account-item" key={account.id}>
-                        <Link className="sidebar-account-link" to={`/transactions?accountId=${account.id}`}>
-                          <span className="sidebar-account-name">{account.name}</span>
-                          <span className={`sidebar-account-balance ${account.balance >= 0 ? "positive" : "negative"}`}>
-                            {account.balanceFormatted}
-                          </span>
-                        </Link>
-                      </div>
-                    );
-                  })}
+                      return (
+                        <div className="sidebar-account-item" key={account.id}>
+                          <Link className="sidebar-account-link" to={`/transactions?account=${account.id}`}>
+                            <span className="sidebar-account-name">{account.name}</span>
+                            <span className={`sidebar-account-balance ${account.balance >= 0 ? "positive" : "negative"}`}>
+                              {account.balanceFormatted}
+                            </span>
+                          </Link>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+              ))
+            )}
+          </div>
+          <button type="button" className="sidebar-edit-toggle" onClick={() => setIsEditMode(true)}>
+            Add / Edit accounts
+          </button>
+        </>
       ) : null}
 
       {!loading && isEditMode ? (
@@ -201,14 +236,28 @@ export default function SidebarAccounts() {
                   event.preventDefault();
                   handleUpdateAccount(account.id);
                 }}
+                onBlur={(event) => handleEditFormBlur(account.id, event)}
+                onKeyDown={(event) => handleEditFormKeyDown(account.id, event)}
               >
                 <div className="sidebar-account-edit-head">
                   <Link className="sidebar-account-edit-link" to={`/transactions?account=${account.id}`}>
                     {account.name}
                   </Link>
-                  <span className={`sidebar-account-balance ${account.balance >= 0 ? "positive" : "negative"}`}>
-                    {account.balanceFormatted}
-                  </span>
+                  <div className="sidebar-account-edit-actions">
+                    <span className={`sidebar-account-balance ${account.balance >= 0 ? "positive" : "negative"}`}>
+                      {account.balanceFormatted}
+                    </span>
+                    <button
+                      type="button"
+                      className="sidebar-delete-button"
+                      title="Delete account"
+                      aria-label={`Delete ${account.name}`}
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => handleDeleteAccount(account.id)}
+                    >
+                      x
+                    </button>
+                  </div>
                 </div>
                 <div className="sidebar-account-edit-grid">
                   <label>
@@ -242,9 +291,6 @@ export default function SidebarAccounts() {
                       ))}
                     </select>
                   </label>
-                  <button type="submit" className="secondary">
-                    Save
-                  </button>
                 </div>
               </form>
             );
@@ -288,6 +334,9 @@ export default function SidebarAccounts() {
               <button type="submit">Create</button>
             </div>
           </form>
+          <button type="button" className="sidebar-edit-toggle" onClick={() => setIsEditMode(false)}>
+            Done editing
+          </button>
         </div>
       ) : null}
     </section>

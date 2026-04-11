@@ -13,9 +13,9 @@ export default function App() {
     <div className="shell">
       <aside className="sidebar">
         <NavLink className="brand" to="/budget">
-          <span className="brand-mark">S</span>
+          <span className="brand-mark">K</span>
           <span>
-            <strong>Spendwise</strong>
+            <strong>Kaboom</strong>
           </span>
         </NavLink>
 

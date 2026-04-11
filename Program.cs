@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
-using Spendwise.Api;
-using Spendwise.Data;
-using Spendwise.Services;
+using Kaboom.Api;
+using Kaboom.Data;
+using Kaboom.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,15 +16,15 @@ Directory.CreateDirectory(dataProtectionPath);
 
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionPath))
-    .SetApplicationName("Spendwise");
+    .SetApplicationName("Kaboom");
 
-builder.Services.AddDbContextFactory<SpendwiseDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Spendwise")));
+builder.Services.AddDbContextFactory<KaboomDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Kaboom")));
 
 builder.Services.AddScoped<PostgresBudgetRepository>();
 builder.Services.AddScoped<IBudgetRepository>(serviceProvider => serviceProvider.GetRequiredService<PostgresBudgetRepository>());
 builder.Services.AddScoped<DatabaseBootstrapper>();
-builder.Services.AddScoped<SpendwiseApiService>();
+builder.Services.AddScoped<KaboomApiService>();
 builder.Services.AddSingleton<BudgetCalculator>();
 builder.Services.AddCors(options =>
 {
@@ -78,7 +78,7 @@ if (clientFileProvider is not null)
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("ClientApp");
-app.MapSpendwiseApi();
+app.MapKaboomApi();
 
 if (clientFileProvider is not null)
 {

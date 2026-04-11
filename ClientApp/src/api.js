@@ -79,6 +79,11 @@ export const api = {
       body: JSON.stringify(payload)
     });
   },
+  deleteAccount(id) {
+    return apiRequest(`/api/accounts/${id}`, {
+      method: "DELETE"
+    });
+  },
   getCategories() {
     return apiRequest("/api/categories");
   },
