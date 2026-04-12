@@ -25,16 +25,16 @@ Run this once per repo/branch/environment to let GitHub Actions authenticate to 
 Copy and edit the bootstrap parameters file:
 
 ```powershell
-copy infra\bootstrap\github-oidc.parameters.example.bicepparam infra\bootstrap\github-oidc.prod.bicepparam
+copy infra\bootstrap\github-oidc.parameters.example.bicepparam infra\bootstrap\github-oidc.dev.bicepparam
 ```
 
 Deploy the bootstrap template:
 
 ```powershell
 az deployment group create `
-  --resource-group rg-kaboom-prod `
+  --resource-group rg-kaboom-dev `
   --template-file infra/bootstrap/github-oidc.bicep `
-  --parameters infra/bootstrap/github-oidc.prod.bicepparam
+  --parameters infra/bootstrap/github-oidc.dev.bicepparam
 ```
 
 Capture these outputs and add them to GitHub secrets:
@@ -61,13 +61,13 @@ And these GitHub repository variables for the infra pipeline:
 Create a resource group if you do not already have one:
 
 ```powershell
-az group create --name rg-kaboom-prod --location australiaeast
+az group create --name rg-kaboom-dev --location australiaeast
 ```
 
 Copy and edit the example parameters file:
 
 ```powershell
-copy infra\main.parameters.example.bicepparam infra\main.parameters.prod.bicepparam
+copy infra\main.parameters.example.bicepparam infra\main.parameters.dev.bicepparam
 ```
 
 Deploy:
@@ -77,9 +77,9 @@ $postgresPassword = -join ((48..57) + (65..90) + (97..122) + 33,35,36,37,42,43,4
 $googleClientSecret = Read-Host "Google client secret (optional, leave blank if not using Google login)"
 
 az deployment group create `
-  --resource-group rg-kaboom-prod `
+  --resource-group rg-kaboom-dev `
   --template-file infra/main.bicep `
-  --parameters infra/main.parameters.prod.bicepparam `
+  --parameters infra/main.parameters.dev.bicepparam `
   --parameters postgresAdminPassword="$postgresPassword" `
   --parameters googleClientSecret="$googleClientSecret"
 ```
@@ -95,5 +95,5 @@ After deployment, capture these outputs:
 
 - The app remains publicly reachable through App Service, but the PostgreSQL server and Key Vault are now private to the virtual network.
 - App Service is integrated into the VNet and reads runtime secrets through Key Vault references.
-- Do not commit real `.prod.bicepparam` files. They are ignored by `.gitignore`.
+- Do not commit real `.dev.bicepparam` or `.prod.bicepparam` files. They are ignored by `.gitignore`.
 - If you add a custom domain later, update both `Application__PublicOrigin` and your Google OAuth redirect URIs.

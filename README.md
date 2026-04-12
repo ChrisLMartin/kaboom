@@ -158,11 +158,11 @@ The GitHub-to-Azure trust setup is now split out as a one-off bootstrap template
 Run that once first:
 
 ```powershell
-copy c:\repos\kaboom\infra\bootstrap\github-oidc.parameters.example.bicepparam c:\repos\kaboom\infra\bootstrap\github-oidc.prod.bicepparam
+copy c:\repos\kaboom\infra\bootstrap\github-oidc.parameters.example.bicepparam c:\repos\kaboom\infra\bootstrap\github-oidc.dev.bicepparam
 az deployment group create `
-  --resource-group rg-kaboom-prod `
+  --resource-group rg-kaboom-dev `
   --template-file c:\repos\kaboom\infra\bootstrap\github-oidc.bicep `
-  --parameters c:\repos\kaboom\infra\bootstrap\github-oidc.prod.bicepparam
+  --parameters c:\repos\kaboom\infra\bootstrap\github-oidc.dev.bicepparam
 ```
 
 That creates the GitHub deployment identity and OIDC federated credential. Take its outputs and add these GitHub secrets:
@@ -186,13 +186,13 @@ Also set:
 4. Deploy the Bicep:
 
 ```powershell
-az group create --name rg-kaboom-prod --location australiaeast
+az group create --name rg-kaboom-dev --location australiaeast
 $postgresPassword = -join ((48..57) + (65..90) + (97..122) + 33,35,36,37,42,43,45,61 | Get-Random -Count 32 | ForEach-Object { [char]$_ })
 $googleClientSecret = Read-Host "Google client secret (optional, leave blank if not using Google login)"
 az deployment group create `
-  --resource-group rg-kaboom-prod `
+  --resource-group rg-kaboom-dev `
   --template-file infra/main.bicep `
-  --parameters infra/main.parameters.prod.bicepparam `
+  --parameters infra/main.parameters.dev.bicepparam `
   --parameters postgresAdminPassword="$postgresPassword" `
   --parameters googleClientSecret="$googleClientSecret"
 ```
@@ -293,7 +293,7 @@ https://<your-web-app-host>/signin-google
 For example:
 
 ```text
-https://kaboom-prod-example.azurewebsites.net/signin-google
+https://kaboom-dev-example.azurewebsites.net/signin-google
 ```
 
 If you later attach a custom domain, also add the custom-domain redirect URI and update `Application__PublicOrigin`.

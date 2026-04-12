@@ -7,8 +7,8 @@ This guide starts from a blank slate and gets Kaboom to the point where Azure in
 For room to grow without overengineering, start with:
 
 - one dedicated Microsoft Entra tenant for Kaboom
-- one Azure subscription for production
-- one production resource group
+- one Azure subscription for development
+- one development resource group
 - local development on your machine
 
 Do not start with management groups, multiple subscriptions, or hub-and-spoke networking unless you already know you need them. Azure management groups are useful once you have multiple subscriptions to govern, but they are unnecessary overhead for a single-subscription app. Source: [Azure management groups overview](https://learn.microsoft.com/en-us/azure/governance/management-groups/).
@@ -16,8 +16,8 @@ Do not start with management groups, multiple subscriptions, or hub-and-spoke ne
 Good first naming:
 
 - tenant: dedicated to Kaboom
-- subscription: `Kaboom Production`
-- resource group: `rg-kaboom-prod`
+- subscription: `Kaboom Development`
+- resource group: `rg-kaboom-dev`
 - region: `australiaeast` or the Azure region closest to your users
 
 ## What You Must Do Manually
@@ -50,11 +50,11 @@ If you do not already have an Azure account:
 - choose either a free account or pay-as-you-go
 - note which Microsoft account or work account owns billing
 
-If you want clean isolation for Kaboom production, use a dedicated tenant/account path rather than mixing it into a personal or company-wide playground subscription.
+If you want clean isolation for Kaboom later, use a dedicated tenant/account path rather than mixing it into a personal or company-wide playground subscription.
 
 ### 2. Create or confirm the Microsoft Entra tenant
 
-If your new Azure signup already created a tenant, that is often enough for a first production setup.
+If your new Azure signup already created a tenant, that is often enough for a first development setup.
 
 If you want a separate dedicated tenant for Kaboom:
 
@@ -102,9 +102,9 @@ Run the repo script:
 ```powershell
 pwsh -File c:\repos\kaboom\scripts\azure\Initialize-KaboomGitHubOidc.ps1 `
   -SubscriptionId "<subscription-id>" `
-  -ResourceGroupName "rg-kaboom-prod" `
+  -ResourceGroupName "rg-kaboom-dev" `
   -Location "australiaeast" `
-  -NamePrefix "kaboomprod" `
+  -NamePrefix "kaboomdev" `
   -GitHubOwner "<github-owner>" `
   -GitHubRepository "kaboom"
 ```
@@ -144,9 +144,9 @@ Run the repo script:
 ```powershell
 pwsh -File c:\repos\kaboom\scripts\azure\Deploy-KaboomAzureInfra.ps1 `
   -SubscriptionId "<subscription-id>" `
-  -ResourceGroupName "rg-kaboom-prod" `
+  -ResourceGroupName "rg-kaboom-dev" `
   -Location "australiaeast" `
-  -NamePrefix "kaboomprod" `
+  -NamePrefix "kaboomdev" `
   -WebAppName "<globally-unique-web-app-name>" `
   -PostgresServerName "<globally-unique-postgres-server-name>" `
   -PublicOrigin "https://<your-web-app-name>.azurewebsites.net"
