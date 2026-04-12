@@ -10,9 +10,13 @@ The GitHub-to-Azure trust bootstrap is intentionally split out as a one-time ste
 - Linux App Service web app for Kaboom
 - Log Analytics workspace
 - Application Insights
+- Virtual network with dedicated subnets for App Service integration, private endpoints, and PostgreSQL
+- Azure Key Vault
+- Private DNS zones for Key Vault and PostgreSQL
 - Azure Database for PostgreSQL Flexible Server
 - PostgreSQL database
-- PostgreSQL firewall rules for Azure services and an optional developer IP
+- Private Key Vault access via private endpoint
+- Private PostgreSQL access via delegated subnet
 
 ## One-Time GitHub Bootstrap
 
@@ -41,11 +45,12 @@ Capture these outputs and add them to GitHub secrets:
 
 Also add this GitHub secret:
 
-- `AZURE_WEBAPP_NAME`
+- none required for the app name
 
 And these GitHub repository variables for the infra pipeline:
 
 - `AZURE_RESOURCE_GROUP`
+- `AZURE_WEBAPP_NAME`
 - `KABOOM_NAME_PREFIX`
 - `KABOOM_POSTGRES_SERVER_NAME`
 - `KABOOM_PUBLIC_ORIGIN`
@@ -68,19 +73,27 @@ copy infra\main.parameters.example.bicepparam infra\main.parameters.prod.biceppa
 Deploy:
 
 ```powershell
+$postgresPassword = -join ((48..57) + (65..90) + (97..122) + 33,35,36,37,42,43,45,61 | Get-Random -Count 32 | ForEach-Object { [char]$_ })
+$googleClientSecret = Read-Host "Google client secret (optional, leave blank if not using Google login)"
+
 az deployment group create `
   --resource-group rg-kaboom-prod `
   --template-file infra/main.bicep `
-  --parameters infra/main.parameters.prod.bicepparam
+  --parameters infra/main.parameters.prod.bicepparam `
+  --parameters postgresAdminPassword="$postgresPassword" `
+  --parameters googleClientSecret="$googleClientSecret"
 ```
 
 After deployment, capture these outputs:
 
 - `webAppName`
 - `webAppUrl`
+- `keyVaultName`
+- `keyVaultUri`
 
 ## Notes
 
-- `AllowAzureServices` is enabled by default for PostgreSQL because it is the simplest way to let App Service connect without private networking.
-- If you later want tighter network isolation, move to VNet integration + private access for PostgreSQL.
+- The app remains publicly reachable through App Service, but the PostgreSQL server and Key Vault are now private to the virtual network.
+- App Service is integrated into the VNet and reads runtime secrets through Key Vault references.
+- Do not commit real `.prod.bicepparam` files. They are ignored by `.gitignore`.
 - If you add a custom domain later, update both `Application__PublicOrigin` and your Google OAuth redirect URIs.

@@ -52,6 +52,18 @@ docker compose down -v
 docker compose up -d postgres
 ```
 
+For local secrets, do not put real values into [appsettings.json](c:\repos\kaboom\appsettings.json). Use ASP.NET Core user-secrets instead:
+
+```powershell
+cd c:\repos\kaboom
+dotnet user-secrets set "ConnectionStrings:Kaboom" "Host=localhost;Port=5432;Database=kaboom;Username=postgres;Password=postgres"
+dotnet user-secrets set "Application:PublicOrigin" "http://localhost:5085"
+dotnet user-secrets set "Authentication:Google:ClientId" "<optional-google-client-id>"
+dotnet user-secrets set "Authentication:Google:ClientSecret" "<optional-google-client-secret>"
+```
+
+A local file example is provided at [appsettings.Development.example.json](c:\repos\kaboom\appsettings.Development.example.json), but keep any real `appsettings.Development.json` file untracked.
+
 ## Run Locally
 
 ### Backend + Vite dev mode
@@ -127,6 +139,7 @@ Notes:
 - `Application__PublicOrigin` is used to validate absolute return URLs.
 - In Vite dev mode, Google login returns to `http://localhost:5173` after the backend finishes the OAuth flow.
 - In hosted mode, the app usually runs on a single origin, so the return path stays relative.
+- In Azure, the Google client secret should live in Key Vault rather than directly in App Service settings.
 
 ## Hosting Recommendation
 
@@ -134,6 +147,7 @@ The cleanest managed setup for this repo is:
 
 - Azure App Service for the ASP.NET host
 - Azure Database for PostgreSQL Flexible Server for the database
+- Azure Key Vault for runtime secrets
 
 Infrastructure as code is included in [infra/main.bicep](c:\repos\kaboom\infra\main.bicep), with a sample parameters file at [main.parameters.example.bicepparam](c:\repos\kaboom\infra\main.parameters.example.bicepparam) and deployment notes in [infra/README.md](c:\repos\kaboom\infra\README.md).
 
@@ -159,7 +173,7 @@ That creates the GitHub deployment identity and OIDC federated credential. Take 
 
 Also set:
 
-- `AZURE_WEBAPP_NAME` as a GitHub secret
+- `AZURE_WEBAPP_NAME` as a GitHub variable
 
 ### Deploy The Azure Infrastructure
 
@@ -168,16 +182,19 @@ Also set:
 3. Copy `infra/main.parameters.example.bicepparam` to your own parameters file and fill in:
    - a globally unique `webAppName`
    - a globally unique `postgresServerName`
-   - a strong `postgresAdminPassword`
    - optionally your Google OAuth client ID and secret
 4. Deploy the Bicep:
 
 ```powershell
 az group create --name rg-kaboom-prod --location australiaeast
+$postgresPassword = -join ((48..57) + (65..90) + (97..122) + 33,35,36,37,42,43,45,61 | Get-Random -Count 32 | ForEach-Object { [char]$_ })
+$googleClientSecret = Read-Host "Google client secret (optional, leave blank if not using Google login)"
 az deployment group create `
   --resource-group rg-kaboom-prod `
   --template-file infra/main.bicep `
-  --parameters infra/main.parameters.prod.bicepparam
+  --parameters infra/main.parameters.prod.bicepparam `
+  --parameters postgresAdminPassword="$postgresPassword" `
+  --parameters googleClientSecret="$googleClientSecret"
 ```
 
 The Bicep deployment creates:
@@ -185,18 +202,21 @@ The Bicep deployment creates:
 - Azure App Service plan
 - Linux Web App
 - Application Insights + Log Analytics
+- Azure Key Vault
+- virtual network + private DNS
 - PostgreSQL Flexible Server + `kaboom` database
-- PostgreSQL firewall rules
+- private PostgreSQL connectivity
+- private Key Vault connectivity
 
 Required app settings in Azure App Service:
 
 ```text
-ConnectionStrings__Kaboom=Host=...;Port=5432;Database=kaboom;Username=...;Password=...
 Authentication__Google__ClientId=...
-Authentication__Google__ClientSecret=...
 Application__PublicOrigin=https://your-domain.example.com
 ASPNETCORE_ENVIRONMENT=Production
 ```
+
+You no longer need to store the database connection string or Google client secret directly in App Service configuration. The app reads them from Key Vault through Key Vault references.
 
 ### Deploy From GitHub Into Azure
 
@@ -208,7 +228,6 @@ After the bootstrap deployment, add these GitHub secrets or, preferably for a pu
 AZURE_CLIENT_ID
 AZURE_TENANT_ID
 AZURE_SUBSCRIPTION_ID
-AZURE_WEBAPP_NAME
 ```
 
 How to map them:
@@ -216,12 +235,12 @@ How to map them:
 - `AZURE_CLIENT_ID` = `githubDeploymentClientId` output from the bootstrap deployment
 - `AZURE_TENANT_ID` = `azureTenantId` output
 - `AZURE_SUBSCRIPTION_ID` = `azureSubscriptionId` output
-- `AZURE_WEBAPP_NAME` = your deployed web app name
 
 For the infra pipeline, also add these GitHub repository variables:
 
 ```text
 AZURE_RESOURCE_GROUP
+AZURE_WEBAPP_NAME
 KABOOM_NAME_PREFIX
 KABOOM_POSTGRES_SERVER_NAME
 KABOOM_PUBLIC_ORIGIN
@@ -235,6 +254,13 @@ POSTGRES_ADMIN_PASSWORD
 GOOGLE_CLIENT_SECRET
 ```
 
+Best practice:
+
+- keep runtime secrets in Azure Key Vault
+- keep only deployment-time bootstrap secrets in GitHub
+- use GitHub OIDC for Azure auth so there is no Azure client secret in GitHub
+- use GitHub Environment secrets/variables if you want approval gates between dev/staging/prod
+
 Then:
 
 1. Run the one-time bootstrap.
@@ -246,6 +272,8 @@ The infra workflow:
 
 - only runs when `infra/**` changes
 - updates Azure resources from `infra/main.bicep`
+- passes secure inputs only at deployment time
+- writes the real runtime secrets into Key Vault through the Bicep deployment
 
 The app deploy workflow:
 
