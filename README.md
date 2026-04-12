@@ -137,6 +137,30 @@ The cleanest managed setup for this repo is:
 
 Infrastructure as code is included in [infra/main.bicep](c:\repos\kaboom\infra\main.bicep), with a sample parameters file at [main.parameters.example.bicepparam](c:\repos\kaboom\infra\main.parameters.example.bicepparam) and deployment notes in [infra/README.md](c:\repos\kaboom\infra\README.md).
 
+### One-Time GitHub Bootstrap
+
+The GitHub-to-Azure trust setup is now split out as a one-off bootstrap template in [github-oidc.bicep](c:\repos\kaboom\infra\bootstrap\github-oidc.bicep).
+
+Run that once first:
+
+```powershell
+copy c:\repos\kaboom\infra\bootstrap\github-oidc.parameters.example.bicepparam c:\repos\kaboom\infra\bootstrap\github-oidc.prod.bicepparam
+az deployment group create `
+  --resource-group rg-kaboom-prod `
+  --template-file c:\repos\kaboom\infra\bootstrap\github-oidc.bicep `
+  --parameters c:\repos\kaboom\infra\bootstrap\github-oidc.prod.bicepparam
+```
+
+That creates the GitHub deployment identity and OIDC federated credential. Take its outputs and add these GitHub secrets:
+
+- `AZURE_CLIENT_ID`
+- `AZURE_TENANT_ID`
+- `AZURE_SUBSCRIPTION_ID`
+
+Also set:
+
+- `AZURE_WEBAPP_NAME` as a GitHub secret
+
 ### Deploy The Azure Infrastructure
 
 1. Install Azure CLI and sign in.
@@ -145,7 +169,6 @@ Infrastructure as code is included in [infra/main.bicep](c:\repos\kaboom\infra\m
    - a globally unique `webAppName`
    - a globally unique `postgresServerName`
    - a strong `postgresAdminPassword`
-   - your GitHub owner/repo for OIDC
    - optionally your Google OAuth client ID and secret
 4. Deploy the Bicep:
 
@@ -164,7 +187,6 @@ The Bicep deployment creates:
 - Application Insights + Log Analytics
 - PostgreSQL Flexible Server + `kaboom` database
 - PostgreSQL firewall rules
-- a GitHub deployment identity with federated credentials for `main`
 
 Required app settings in Azure App Service:
 
@@ -180,7 +202,7 @@ ASPNETCORE_ENVIRONMENT=Production
 
 The GitHub Actions workflow now uses Azure OIDC via `azure/login`, which GitHub and Microsoft both recommend over long-lived credentials.
 
-After the Bicep deployment, take these outputs and add them to GitHub Actions secrets or, preferably for a public repo, a protected GitHub Environment:
+After the bootstrap deployment, add these GitHub secrets or, preferably for a public repo, put them in a protected GitHub Environment:
 
 ```text
 AZURE_CLIENT_ID
@@ -191,17 +213,41 @@ AZURE_WEBAPP_NAME
 
 How to map them:
 
-- `AZURE_CLIENT_ID` = `githubDeploymentClientId` output from the Bicep deployment
+- `AZURE_CLIENT_ID` = `githubDeploymentClientId` output from the bootstrap deployment
 - `AZURE_TENANT_ID` = `azureTenantId` output
 - `AZURE_SUBSCRIPTION_ID` = `azureSubscriptionId` output
-- `AZURE_WEBAPP_NAME` = `webAppName` output
+- `AZURE_WEBAPP_NAME` = your deployed web app name
+
+For the infra pipeline, also add these GitHub repository variables:
+
+```text
+AZURE_RESOURCE_GROUP
+KABOOM_NAME_PREFIX
+KABOOM_POSTGRES_SERVER_NAME
+KABOOM_PUBLIC_ORIGIN
+GOOGLE_CLIENT_ID
+```
+
+And these GitHub secrets:
+
+```text
+POSTGRES_ADMIN_PASSWORD
+GOOGLE_CLIENT_SECRET
+```
 
 Then:
 
-1. Push to `main`, or run the workflow manually.
-2. GitHub Actions builds the React app, publishes the ASP.NET app, signs into Azure with OIDC, and deploys to App Service.
+1. Run the one-time bootstrap.
+2. Deploy the main infra once manually or let the infra workflow do it.
+3. Push infra changes to `main` to trigger [infra-azure.yml](c:\repos\kaboom\.github\workflows\infra-azure.yml).
+4. Push app changes to `main` to trigger [azure-appservice.yml](c:\repos\kaboom\.github\workflows\azure-appservice.yml).
 
-That workflow:
+The infra workflow:
+
+- only runs when `infra/**` changes
+- updates Azure resources from `infra/main.bicep`
+
+The app deploy workflow:
 
 - installs Node
 - builds `ClientApp`

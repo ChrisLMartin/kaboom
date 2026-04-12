@@ -1,0 +1,46 @@
+name: Update Azure Infrastructure
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'infra/**'
+      - '.github/workflows/infra-azure.yml'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy-infra:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy infrastructure
+        uses: azure/cli@v2
+        with:
+          azcliversion: 2.64.0
+          inlineScript: |
+            az deployment group create \
+              --resource-group "${{ vars.AZURE_RESOURCE_GROUP }}" \
+              --template-file infra/main.bicep \
+              --parameters \
+                namePrefix="${{ vars.KABOOM_NAME_PREFIX }}" \
+                webAppName="${{ vars.AZURE_WEBAPP_NAME }}" \
+                postgresServerName="${{ vars.KABOOM_POSTGRES_SERVER_NAME }}" \
+                publicOrigin="${{ vars.KABOOM_PUBLIC_ORIGIN }}" \
+                googleClientId="${{ vars.GOOGLE_CLIENT_ID }}" \
+                googleClientSecret="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+                postgresAdminPassword="${{ secrets.POSTGRES_ADMIN_PASSWORD }}"

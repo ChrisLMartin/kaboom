@@ -85,18 +85,6 @@ param googleClientId string = ''
 @description('Optional Google OAuth client secret.')
 param googleClientSecret string = ''
 
-@description('Whether to create a GitHub deployment identity with an OIDC federated credential.')
-param createGitHubDeploymentIdentity bool = true
-
-@description('GitHub repository owner or organization, used for the OIDC trust relationship.')
-param githubRepositoryOwner string = ''
-
-@description('GitHub repository name, used for the OIDC trust relationship.')
-param githubRepositoryName string = ''
-
-@description('GitHub branch allowed to deploy through OIDC.')
-param githubBranch string = 'main'
-
 @description('Allow Azure services to connect to PostgreSQL. This is the simplest App Service connectivity path without private networking.')
 param allowAzureServicesToPostgres bool = true
 
@@ -106,8 +94,6 @@ param developerIpAddress string = ''
 var appHostName = 'https://${webAppName}.azurewebsites.net'
 var effectivePublicOrigin = empty(publicOrigin) ? appHostName : publicOrigin
 var postgresConnectionString = 'Host=${postgresServerName}.postgres.database.azure.com;Port=5432;Database=${postgresDatabaseName};Username=${postgresAdminLogin};Password=${postgresAdminPassword};Ssl Mode=Require'
-var githubOidcSubject = 'repo:${githubRepositoryOwner}/${githubRepositoryName}:ref:refs/heads/${githubBranch}'
-var contributorRoleDefinitionId = subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: appServicePlanName
@@ -238,39 +224,8 @@ resource postgresAllowDeveloper 'Microsoft.DBforPostgreSQL/flexibleServers/firew
   }
 }
 
-resource githubDeploymentIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = if (createGitHubDeploymentIdentity) {
-  name: '${namePrefix}-github'
-  location: location
-}
-
-resource githubOidc 'Microsoft.ManagedIdentity/userAssignedIdentities/federatedIdentityCredentials@2023-01-31' = if (createGitHubDeploymentIdentity && !empty(githubRepositoryOwner) && !empty(githubRepositoryName)) {
-  parent: githubDeploymentIdentity
-  name: 'github-main'
-  properties: {
-    audiences: [
-      'api://AzureADTokenExchange'
-    ]
-    issuer: 'https://token.actions.githubusercontent.com'
-    subject: githubOidcSubject
-  }
-}
-
-resource githubDeploymentRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (createGitHubDeploymentIdentity) {
-  name: guid(resourceGroup().id, githubDeploymentIdentity.id, contributorRoleDefinitionId)
-  scope: resourceGroup()
-  properties: {
-    principalId: githubDeploymentIdentity!.properties.principalId
-    principalType: 'ServicePrincipal'
-    roleDefinitionId: contributorRoleDefinitionId
-  }
-}
-
 output webAppName string = webApp.name
 output webAppUrl string = appHostName
 output publicOrigin string = effectivePublicOrigin
 output postgresServerHost string = '${postgresServer.name}.postgres.database.azure.com'
 output postgresDatabaseName string = postgresDatabase.name
-output githubDeploymentClientId string = createGitHubDeploymentIdentity ? githubDeploymentIdentity!.properties.clientId : ''
-output githubDeploymentPrincipalId string = createGitHubDeploymentIdentity ? githubDeploymentIdentity!.properties.principalId : ''
-output azureTenantId string = tenant().tenantId
-output azureSubscriptionId string = subscription().subscriptionId
