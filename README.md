@@ -330,3 +330,4 @@ If you later want to run the app itself in a container too, pass the connection 
 ## Documentation
 
 - User guide: `docs/USER_GUIDE.md`
+- Azure setup: `docs/AZURE_SETUP.md`
