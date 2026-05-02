@@ -73,7 +73,8 @@ copy infra\main.parameters.example.bicepparam infra\main.parameters.dev.biceppar
 Deploy:
 
 ```powershell
-$postgresPassword = -join ((48..57) + (65..90) + (97..122) + 33,35,36,37,42,43,45,61 | Get-Random -Count 32 | ForEach-Object { [char]$_ })
+$chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!#$%*+-='
+$postgresPassword = -join (1..32 | ForEach-Object { $chars[(Get-Random -Maximum $chars.Length)] })
 $googleClientSecret = Read-Host "Google client secret (optional, leave blank if not using Google login)"
 
 az deployment group create `
